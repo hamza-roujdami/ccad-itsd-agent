@@ -111,17 +111,15 @@ ccad-itsm-agent/
 ├── agent.py              ← Agent definition (system prompt, tools, MCP config)
 ├── server.py             ← FastAPI server (/chat, /health)
 ├── config.py             ← Settings (reads from .env)
-├── pyproject.toml         ← Dependencies
-├── tools/
-│   └── __init__.py       ← search_kb tool (Azure AI Search)
+├── pyproject.toml        ← Dependencies
+├── kb/
+│   ├── search.py         ← search_kb @tool (Azure AI Search, semantic search)
+│   ├── index_kb.py       ← Indexer script (Excel → Azure AI Search)
+│   ├── solutions_kb.xlsx ← 33 IT knowledge base articles from CCAD
+│   └── README.md         ← KB docs
 ├── mock_mcp/
 │   ├── __init__.py
-│   └── server.py         ← Mock ManageEngine MCP server (17 tools, local dev)
-├── data/
-│   ├── README.md         ← KB data docs
-│   ├── index_kb.py       ← Indexer script (Excel → Azure AI Search)
-│   └── solutions_kb.xlsx ← 33 IT knowledge base articles from CCAD
-├── skills/               ← Agent skills (future)
+│   └── server.py         ← Mock ManageEngine MCP server (17 tools, real CCAD values)
 └── tests/                ← Tests
 ```
 
@@ -157,7 +155,7 @@ MCP_SERVER_URL=http://localhost:8001/mcp
 ### Index the knowledge base
 
 ```bash
-python -m data.index_kb
+python -m kb.index_kb
 ```
 
 ### Run (local development)

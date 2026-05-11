@@ -29,4 +29,4 @@ mock = [
 
 [tool.setuptools]
 py-modules = ["agent", "config", "server"]
-packages = ["tools", "mock_mcp", "tests"]
+packages = ["kb", "mock_mcp", "tests"]

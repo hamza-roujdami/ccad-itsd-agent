@@ -5,7 +5,7 @@ from agent_framework.foundry import FoundryChatClient
 from azure.identity import DefaultAzureCredential
 
 from config import settings
-from tools import search_kb
+from kb.search import search_kb
 
 SYSTEM_PROMPT = """\
 You are the CCAD (Cleveland Clinic Abu Dhabi) IT Service Desk Agent.

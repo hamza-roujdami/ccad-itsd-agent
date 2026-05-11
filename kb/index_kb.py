@@ -1,9 +1,9 @@
 """Index KB data from Excel into Azure AI Search.
 
 Usage:
-    python -m data.index_kb
+    python -m kb.index_kb
 
-Reads data/solutions_kb.xlsx and uploads all articles to the itsd-kb index.
+Reads kb/solutions_kb.xlsx and uploads all articles to the itsd-kb index.
 Creates the index if it doesn't exist, or updates documents if it does.
 """
 
@@ -23,7 +23,7 @@ from azure.search.documents.indexes.models import (
 
 from config import settings
 
-EXCEL_PATH = "data/solutions_kb.xlsx"
+EXCEL_PATH = "kb/solutions_kb.xlsx"
 
 
 def load_articles() -> list[dict]:

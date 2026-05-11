@@ -1,9 +1,10 @@
-# data/
+# kb/
 
-KB data and indexing scripts for the CCAD ITSD Agent.
+Knowledge base search, data, and indexing for the CCAD ITSM Agent.
 
 ## Files
 
+- `search.py` — `search_kb` @tool (Azure AI Search, semantic search)
 - `solutions_kb.xlsx` — IT knowledge base articles from CCAD (33 articles)
 - `index_kb.py` — Script to create/update the Azure AI Search index
 
@@ -21,9 +22,8 @@ KB data and indexing scripts for the CCAD ITSD Agent.
 Index (or re-index) the KB into Azure AI Search:
 
 ```bash
-cd csa-code
 source .venv/bin/activate
-python -m data.index_kb
+python -m kb.index_kb
 ```
 
 Requires Azure CLI login (`az login`) and the following env vars in `.env`:
