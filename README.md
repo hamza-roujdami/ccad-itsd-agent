@@ -128,13 +128,15 @@ ccad-itsm-agent/
 ### Prerequisites
 
 - Python 3.11+
-- Azure CLI logged in (`az login`)
-- Azure resources deployed (see `infra/`)
+- Azure CLI logged in (`az login`) with access to:
+  - Azure AI Foundry (GPT-4o deployment)
+  - Azure AI Search (with `itsd-kb` index populated)
 
 ### Setup
 
 ```bash
-cd ccad-itsm-agent
+git clone https://github.com/hamza-roujdami/ccad-itsd-agent.git
+cd ccad-itsd-agent
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev,mock]"
@@ -142,7 +144,11 @@ pip install -e ".[dev,mock]"
 
 ### Configure
 
-Copy `.env.example` or create `.env`:
+Copy `.env.example` to `.env` and fill in your Azure endpoints:
+
+```bash
+cp .env.example .env
+```
 
 ```env
 FOUNDRY_PROJECT_ENDPOINT=https://<your-ai-services>.cognitiveservices.azure.com/
@@ -154,19 +160,21 @@ MCP_SERVER_URL=http://localhost:8001/mcp
 
 ### Index the knowledge base
 
+Populate the Azure AI Search index with the 33 CCAD KB articles:
+
 ```bash
 python -m kb.index_kb
 ```
 
 ### Run (local development)
 
-Start the mock MCP server (ManageEngine substitute):
+Terminal 1 — start the mock MCP server (ManageEngine substitute):
 
 ```bash
-python -m mock_mcp.server &
+python -m mock_mcp.server
 ```
 
-Start the agent API:
+Terminal 2 — start the agent API:
 
 ```bash
 python server.py
