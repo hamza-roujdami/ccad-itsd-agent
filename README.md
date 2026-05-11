@@ -1,0 +1,237 @@
+# CCAD ITSM Agent
+
+An AI-powered IT Service Management agent for **Cleveland Clinic Abu Dhabi (CCAD)**. Built with the [Microsoft Agent Framework](https://github.com/microsoft/agent-framework) (Python), Core42 Compass LLM (via Azure APIM), and ManageEngine ServiceDesk Plus via MCP.
+
+## What it does
+
+The agent acts as the **first line of IT support** for clinicians, nurses, and staff:
+
+1. **Understands the issue** — parses natural language IT requests and asks clarifying questions
+2. **Searches the knowledge base first** — looks up troubleshooting guides and FAQs before creating tickets
+3. **Creates and manages tickets intelligently** — classifies priority, category, and resolver group using CCAD's ITSM taxonomy
+4. **Escalates with full context** — when self-service fails, creates a ticket with conversation summary so human resolvers can pick up seamlessly
+5. **Routes non-IT requests** — directs HR, Facilities, and Operations questions to the right contact
+
+## Architecture
+
+```mermaid
+graph LR
+    classDef channel fill:#E3F2FD,stroke:#1565C0,stroke-width:2px,color:#0D47A1
+    classDef platform fill:#FFF8E1,stroke:#F9A825,stroke-width:2px,color:#795548
+    classDef agent fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px,color:#1B5E20
+    classDef azure fill:#E1F5FE,stroke:#0277BD,stroke-width:2px,color:#01579B
+    classDef tool fill:#FCE4EC,stroke:#C62828,stroke-width:2px,color:#B71C1C
+    classDef llm fill:#F3E5F5,stroke:#6A1B9A,stroke-width:2px,color:#4A148C
+
+    Users["👥 Users<br/>(Clinicians, Nurses,<br/>Doctors, IT Staff)"]
+
+    subgraph Channels["User Channels"]
+        direction TB
+        Phone["📞 Phone Call<br/>(Azure Communication Services)"]
+        Teams["💬 Microsoft Teams"]
+        WhatsApp["📱 WhatsApp (Twilio)"]
+        WebUI["🌐 Web UI (React SPA)"]
+    end
+
+    subgraph Platform["Azure Container Apps"]
+        direction TB
+        FastAPI["⚡ FastAPI Gateway<br/>(Uvicorn)"]
+    end
+
+    subgraph AgentLayer["Agent Orchestrator (MAF)"]
+        direction TB
+        Orchestrator["🤖 ITSD Supervisor Agent<br/>(Microsoft Agent Framework)"]
+    end
+
+    subgraph LLMLayer["LLM Provider"]
+        direction TB
+        APIM_AI["☁️ Azure APIM<br/>(AI Gateway)"]
+        Core42["🧠 Core42 Compass<br/>(LLM)"]
+    end
+
+    subgraph Tools["Agent Tools & Services"]
+        direction TB
+        SearchKB["🔍 search_kb<br/>(Native Tool)"]
+        MCPTools["🔧 ManageEngine MCP Tools<br/>(17 tools)"]
+    end
+
+    subgraph BackendSvcs["Backend Services"]
+        direction TB
+        AIS["📚 Azure AI Search<br/>(IT Knowledge Base)"]
+        APIM_ME["☁️ Azure APIM<br/>(ME Gateway)"]
+        ME["🎫 ManageEngine<br/>ServiceDesk Plus"]
+    end
+
+    subgraph Infra["Observability & Security"]
+        direction TB
+        Monitor["📊 Azure Monitor<br/>& App Insights"]
+        KV["🔐 Azure Key Vault"]
+        ManagedID["🆔 Managed Identity"]
+    end
+
+    Users --> Channels
+    Phone --> FastAPI
+    Teams --> FastAPI
+    WhatsApp --> FastAPI
+    WebUI --> FastAPI
+    FastAPI --> Orchestrator
+    Orchestrator --> APIM_AI
+    APIM_AI --> Core42
+    Orchestrator --> SearchKB
+    Orchestrator --> MCPTools
+    SearchKB --> AIS
+    MCPTools --> APIM_ME
+    APIM_ME --> ME
+    FastAPI -.-> Monitor
+    Orchestrator -.-> Monitor
+    Orchestrator -.-> KV
+    Orchestrator -.-> ManagedID
+
+    class Phone,Teams,WhatsApp,WebUI channel
+    class FastAPI platform
+    class Orchestrator agent
+    class APIM_AI,Core42 llm
+    class SearchKB,MCPTools,AIS,APIM_ME,ME tool
+    class Monitor,KV,ManagedID azure
+```
+
+### Data Flow
+
+1. User contacts via any channel (Phone, Teams, WhatsApp, Web UI) → hits **FastAPI gateway** on Azure Container Apps
+2. Gateway routes to the **ITSD Supervisor Agent** (Microsoft Agent Framework)
+3. Agent calls **Core42 Compass** LLM through **Azure APIM** (AI Gateway) for reasoning
+4. Agent uses `search_kb` → **Azure AI Search** to find KB articles first (KB-first triage)
+5. Only if KB fails → Agent uses MCP tools → **APIM** → **ManageEngine ServiceDesk Plus** to create/manage tickets
+6. All calls instrumented via **Azure Monitor & App Insights**
+
+## Project structure
+
+```
+ccad-itsm-agent/
+├── agent.py              ← Agent definition (system prompt, tools, MCP config)
+├── server.py             ← FastAPI server (/chat, /health)
+├── config.py             ← Settings (reads from .env)
+├── pyproject.toml         ← Dependencies
+├── tools/
+│   └── __init__.py       ← search_kb tool (Azure AI Search)
+├── mock_mcp/
+│   ├── __init__.py
+│   └── server.py         ← Mock ManageEngine MCP server (17 tools, local dev)
+├── data/
+│   ├── README.md         ← KB data docs
+│   ├── index_kb.py       ← Indexer script (Excel → Azure AI Search)
+│   └── solutions_kb.xlsx ← 33 IT knowledge base articles from CCAD
+├── skills/               ← Agent skills (future)
+└── tests/                ← Tests
+```
+
+## Quick start
+
+### Prerequisites
+
+- Python 3.11+
+- Azure CLI logged in (`az login`)
+- Azure resources deployed (see `infra/`)
+
+### Setup
+
+```bash
+cd ccad-itsm-agent
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e ".[dev,mock]"
+```
+
+### Configure
+
+Copy `.env.example` or create `.env`:
+
+```env
+FOUNDRY_PROJECT_ENDPOINT=https://<your-ai-services>.cognitiveservices.azure.com/
+FOUNDRY_MODEL=gpt-4o
+AZURE_SEARCH_ENDPOINT=https://<your-search>.search.windows.net
+AZURE_SEARCH_INDEX_NAME=itsd-kb
+MCP_SERVER_URL=http://localhost:8001/mcp
+```
+
+### Index the knowledge base
+
+```bash
+python -m data.index_kb
+```
+
+### Run (local development)
+
+Start the mock MCP server (ManageEngine substitute):
+
+```bash
+python -m mock_mcp.server &
+```
+
+Start the agent API:
+
+```bash
+python server.py
+```
+
+### Test
+
+```bash
+# Health check
+curl http://localhost:8000/health
+
+# Chat — KB question (no ticket created)
+curl -X POST http://localhost:8000/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message": "How do I reset my CCAD password?"}'
+
+# Chat — Issue requiring ticket
+curl -X POST http://localhost:8000/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Epic Hyperspace is down for the entire cardiology department"}'
+```
+
+## Tech stack
+
+| Component | Technology |
+|-----------|-----------|
+| Agent Framework | [Microsoft Agent Framework](https://github.com/microsoft/agent-framework) (Python) |
+| LLM | Core42 Compass via Azure APIM (AI Gateway) |
+| Knowledge Base | Azure AI Search (semantic search) |
+| Ticketing | ManageEngine ServiceDesk Plus via MCP (APIM gateway) |
+| API | FastAPI + Uvicorn |
+| Auth | Azure Identity (DefaultAzureCredential) |
+| Infra | Bicep (`infra/`) |
+
+## API
+
+### `POST /chat`
+
+```json
+{
+  "message": "My printer is not working",
+  "session_id": "optional-for-multi-turn"
+}
+```
+
+Response:
+```json
+{
+  "reply": "I found some troubleshooting steps...",
+  "session_id": "uuid"
+}
+```
+
+### `GET /health`
+
+Returns `{"status": "ok"}`.
+
+## KB content
+
+33 articles covering: Cisco Phone, Printing, Epic, Passwords, VPN, VDI, MFA, MS Teams, Intune, PowerMic, Email, Monitors, and more. See [`data/README.md`](data/README.md).
+
+## Related
+
+- `infra/` — Azure infrastructure (Bicep): Foundry Account + Project, GPT-4o, text-embedding-3-large, AI Search, Key Vault, Monitoring
+- `factory-code/` — Factory development team implementation (separate approach)
+- `references/` — Cloned reference repos (gitignored)
