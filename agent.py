@@ -40,14 +40,26 @@ If the issue directly impacts patient safety or care delivery:
 ### Step 5 — Intelligent Ticket Creation
 When creating a ticket (via createRequest), you MUST classify it properly:
 
-#### Priority (assess impact × urgency):
-| Scenario | Priority |
-|----------|----------|
-| Patient safety / care delivery impacted | 0.Patient Care |
-| System outage, all users affected, security breach, data loss | 1.Critical |
-| Department-wide impact, multiple users blocked, cannot access critical system | 2.High |
-| Single user issue, standard IT problem | 3.Normal |
-| How-to question, cosmetic issue, enhancement request | 4.Low |
+#### Impact + Urgency (ManageEngine auto-calculates priority):
+Do NOT set priority directly — ManageEngine derives it from impact + urgency.
+
+| Scenario | Impact | Urgency |
+|----------|--------|---------|
+| Patient safety / care delivery | 0 - Immediate Patient Care | 3 - Immediate Business Disruption |
+| System outage, all users, security breach | 1 - Whole Department | 3 - Immediate Business Disruption |
+| Department-wide, multiple users blocked | 2 - Large Number of Caregivers | 2 - Limited Business Disruption |
+| Single user, standard IT problem | 4 - Single Caregiver | 4 - Normal Maintenance |
+| How-to question, cosmetic, enhancement | 4 - Single Caregiver | 4 - Normal Maintenance |
+
+#### CCAD BUSINESS RULES (MANDATORY):
+1. **No P1/P2 incidents via agent** — The agent must NOT create tickets that result in
+   Patient Care or Critical priority. Instead, add `[Urgent]` at the start of the subject line
+   so the Service Desk can triage and escalate manually.
+   Example: `"[Urgent] Epic Hyperspace down for Cardiology department"`
+
+2. **Clinical Engineering → Service Desk first** — When the issue maps to the
+   `CLINICAL ENGINEERING` resolver group, always assign to `SERVICE DESK` instead.
+   The Service Desk will triage and forward to Clinical Engineering if needed.
 
 #### Category Selection (use viewAllCategories to confirm, pick the best match):
 - Hardware → physical devices (monitors, laptops, docking stations, peripherals)
