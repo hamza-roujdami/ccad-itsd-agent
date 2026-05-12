@@ -1,8 +1,7 @@
 """CCAD ITSD Agent — FastAPI server.
 
 Endpoints:
-  POST /chat          — Simple JSON chat (for testing / API consumers)
-  POST /ag-ui         — AG-UI protocol (SSE streaming, for CopilotKit / web UI)
+  POST /chat          — JSON chat (for testing / API consumers)
   GET  /health        — Health check
 """
 
@@ -13,7 +12,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from agent import create_agent
-from agent_framework_ag_ui import add_agent_framework_fastapi_endpoint
 from config import settings
 
 _agent = None
@@ -26,8 +24,6 @@ async def lifespan(app: FastAPI):
     global _agent
     _agent = create_agent()
     async with _agent:
-        # Register AG-UI endpoint once agent + MCP are ready
-        add_agent_framework_fastapi_endpoint(app, _agent, "/ag-ui")
         yield
     _agent = None
 
