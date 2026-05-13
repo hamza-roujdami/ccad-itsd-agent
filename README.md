@@ -109,7 +109,7 @@ graph LR
 ```
 ccad-itsm-agent/
 ├── agent.py              ← Agent definition (system prompt, tools, MCP config)
-├── server.py             ← FastAPI server (/chat, /health)
+├── server.py             ← FastAPI server (/chat, /health, tools_used tracking)
 ├── config.py             ← Settings (reads from .env)
 ├── pyproject.toml        ← Dependencies
 ├── kb/
@@ -120,7 +120,11 @@ ccad-itsm-agent/
 ├── mock_mcp/
 │   ├── __init__.py
 │   └── server.py         ← Mock ManageEngine MCP server (17 tools, real CCAD values)
-└── tests/                ← Tests
+├── frontend/             ← React chat UI
+│   ├── src/
+│   └── package.json
+├── infra/                ← Azure Bicep (Foundry, AI Search, Key Vault, Monitoring)
+└── tests/
 ```
 
 ## Quick start
@@ -180,7 +184,35 @@ Terminal 2 — start the agent API:
 python server.py
 ```
 
-### Test
+Terminal 3 — start the chat UI:
+
+```bash
+cd frontend
+npm install
+REACT_APP_API_URL=http://localhost:8000 npm start
+```
+
+Open **http://localhost:3000** in your browser.
+
+### Test via UI
+
+The chat UI shows which tool was used for each response:
+
+- **CCAD Knowledge Base** — answered from KB articles (no ticket created)
+- **CCAD ManageEngine** — ticket created/read/updated via ManageEngine MCP
+- **CCAD_ITSM_AGENT** — no tools used (greetings, clarifying questions, non-IT routing)
+
+Try these prompts:
+
+```
+How do I reset my CCAD password?              → KB answer, no ticket
+My laptop screen is cracked                    → asks clarifying questions
+Epic is down for the whole department          → creates urgent ticket
+How do I apply for annual leave?               → redirects to HR
+Can you check the status of ticket 32203?      → reads ticket from ManageEngine
+```
+
+### Test via curl
 
 ```bash
 # Health check

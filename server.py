@@ -52,6 +52,7 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     reply: str
     session_id: str
+    tools_used: list[str] = []
 
 
 @app.get("/health")
@@ -68,9 +69,32 @@ async def chat(req: ChatRequest):
         _sessions[session_id] = _agent.create_session()
 
     session = _sessions[session_id]
+
     result = await _agent.run(req.message, session=session)
 
-    return ChatResponse(reply=result.text, session_id=session_id)
+    # Extract tool names from result messages
+    tools_used = []
+    try:
+        for msg in result.messages:
+            if msg.contents:
+                for c in msg.contents:
+                    if hasattr(c, 'type') and c.type == 'function_call' and hasattr(c, 'name') and c.name:
+                        name = c.name
+                        if name == "search_kb":
+                            tools_used.append("CCAD Knowledge Base")
+                        elif name.startswith("ManageEngine_") or name in (
+                            "createRequest", "requestDetailsById", "updateRequest", "addNote",
+                            "viewAllRequests", "viewAllPriorities", "viewAllStatuses",
+                            "viewAllCategories", "viewAllSupportGroups", "viewAllModes",
+                            "viewAllImpacts", "viewAllUrgencies", "viewAllSolutions",
+                            "viewAllRequestFilters", "getServiceTemplates", "getUserDetails"):
+                            tools_used.append("CCAD ManageEngine")
+                        else:
+                            tools_used.append(name)
+    except Exception:
+        pass
+
+    return ChatResponse(reply=result.text, session_id=session_id, tools_used=list(dict.fromkeys(tools_used)))
 
 
 def _new_session_id() -> str:
