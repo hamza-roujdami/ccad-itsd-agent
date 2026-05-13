@@ -103,15 +103,18 @@ graph LR
 2. Gateway routes to the **ITSD Supervisor Agent** (Microsoft Agent Framework)
 3. Agent calls **Core42 Compass** LLM through **Azure APIM** (AI Gateway) for reasoning
 4. Agent uses `search_kb` → **Azure AI Search** to find KB articles first (KB-first triage)
-5. Only if KB fails → Agent calls `assess_priority` for deterministic multi-signal priority scoring (user input × impact/urgency matrix × text analysis)
-6. Agent uses MCP tools → **APIM** → **ManageEngine ServiceDesk Plus** to create/manage tickets with verified priority
-7. All calls instrumented via **Azure Monitor & App Insights**
+5. Only if KB fails → Agent loads the `ticket-creation` **skill** on-demand (categories, groups, business rules)
+6. Agent calls `assess_priority` for deterministic multi-signal priority scoring (user input × impact/urgency matrix × text analysis)
+7. Agent uses MCP tools → **APIM** → **ManageEngine ServiceDesk Plus** to create/manage tickets with verified priority
+8. All calls instrumented via **Azure Monitor & App Insights**
+
+> **Skills (progressive disclosure):** Business rules, categories, and resolver groups are loaded on-demand via MAF `SkillsProvider` — only when the agent needs to create or manage tickets. KB-only queries skip loading skills entirely, saving ~800 tokens per request.
 
 ## Project structure
 
 ```
 ccad-itsm-agent/
-├── agent.py              ← Agent definition (system prompt, tools, MCP config)
+├── agent.py              ← Agent definition (slim prompt, tools, skills, MCP)
 ├── server.py             ← FastAPI server (/chat, /health, tools_used tracking)
 ├── config.py             ← Settings (reads from .env)
 ├── pyproject.toml        ← Dependencies
@@ -121,13 +124,24 @@ ccad-itsm-agent/
 │   ├── index_kb.py       ← Indexer script (Excel → Azure AI Search)
 │   ├── solutions_kb.xlsx ← 33 IT knowledge base articles from CCAD
 │   └── README.md         ← KB docs
+├── skills/                ← MAF Skills (loaded on-demand, saves tokens)
+│   ├── ticket-creation/
+│   │   ├── SKILL.md       ← Ticket creation workflow + mandatory fields
+│   │   └── references/
+│   │       ├── categories.md       ← ManageEngine categories
+│   │       ├── resolver-groups.md  ← Support group routing
+│   │       └── business-rules.md   ← CCAD business rules
+│   ├── ticket-management/
+│   │   └── SKILL.md       ← Check status, add notes, update, list tickets
+│   └── non-it-routing/
+│       └── SKILL.md       ← HR/Facilities/Operations contacts
 ├── mock_mcp/
 │   ├── __init__.py
 │   └── server.py         ← Mock ManageEngine MCP server (17 tools, real CCAD values)
 ├── frontend/             ← React chat UI
 │   ├── src/
 │   └── package.json
-├── infra/                ← Azure Bicep (Foundry, AI Search, Key Vault, Monitoring)
+├── infra/                ← Azure Bicep (AI Search, Key Vault, Monitoring)
 └── tests/
 ```
 
@@ -137,7 +151,7 @@ ccad-itsm-agent/
 
 - Python 3.11+
 - Azure CLI logged in (`az login`) with access to:
-  - Azure AI Foundry (GPT-4o deployment)
+  - LLM endpoint (Core42 Compass via APIM, or Azure AI Foundry for dev)
   - Azure AI Search (with `itsd-kb` index populated)
 
 ### Setup
@@ -242,6 +256,7 @@ curl -X POST http://localhost:8000/chat \
 | Knowledge Base | Azure AI Search (semantic search) |
 | Ticketing | ManageEngine ServiceDesk Plus via MCP (APIM gateway) |
 | API | FastAPI + Uvicorn |
+| Skills | MAF `SkillsProvider` (progressive disclosure, on-demand loading) |
 | Auth | Azure Identity (DefaultAzureCredential) |
 | Infra | Bicep (`infra/`) |
 
