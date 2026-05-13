@@ -52,6 +52,7 @@ graph LR
     subgraph Tools["Agent Tools & Services"]
         direction TB
         SearchKB["🔍 search_kb<br/>(Native Tool)"]
+        AssessPri["⚖️ assess_priority<br/>(Priority Verification)"]
         MCPTools["🔧 ManageEngine MCP Tools<br/>(17 tools)"]
     end
 
@@ -78,6 +79,7 @@ graph LR
     Orchestrator --> APIM_AI
     APIM_AI --> Core42
     Orchestrator --> SearchKB
+    Orchestrator --> AssessPri
     Orchestrator --> MCPTools
     SearchKB --> AIS
     MCPTools --> APIM_ME
@@ -91,7 +93,7 @@ graph LR
     class FastAPI platform
     class Orchestrator agent
     class APIM_AI,Core42 llm
-    class SearchKB,MCPTools,AIS,APIM_ME,ME tool
+    class SearchKB,AssessPri,MCPTools,AIS,APIM_ME,ME tool
     class Monitor,KV,ManagedID azure
 ```
 
@@ -101,8 +103,9 @@ graph LR
 2. Gateway routes to the **ITSD Supervisor Agent** (Microsoft Agent Framework)
 3. Agent calls **Core42 Compass** LLM through **Azure APIM** (AI Gateway) for reasoning
 4. Agent uses `search_kb` → **Azure AI Search** to find KB articles first (KB-first triage)
-5. Only if KB fails → Agent uses MCP tools → **APIM** → **ManageEngine ServiceDesk Plus** to create/manage tickets
-6. All calls instrumented via **Azure Monitor & App Insights**
+5. Only if KB fails → Agent calls `assess_priority` for deterministic multi-signal priority scoring (user input × impact/urgency matrix × text analysis)
+6. Agent uses MCP tools → **APIM** → **ManageEngine ServiceDesk Plus** to create/manage tickets with verified priority
+7. All calls instrumented via **Azure Monitor & App Insights**
 
 ## Project structure
 
@@ -114,6 +117,7 @@ ccad-itsm-agent/
 ├── pyproject.toml        ← Dependencies
 ├── kb/
 │   ├── search.py         ← search_kb @tool (Azure AI Search, semantic search)
+│   ├── priority.py       ← assess_priority @tool (multi-signal priority verification)
 │   ├── index_kb.py       ← Indexer script (Excel → Azure AI Search)
 │   ├── solutions_kb.xlsx ← 33 IT knowledge base articles from CCAD
 │   └── README.md         ← KB docs

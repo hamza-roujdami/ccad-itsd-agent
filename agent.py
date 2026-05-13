@@ -6,6 +6,7 @@ from azure.identity import DefaultAzureCredential
 
 from config import settings
 from kb.search import search_kb
+from kb.priority import assess_priority
 
 SYSTEM_PROMPT = """\
 You are the CCAD (Cleveland Clinic Abu Dhabi) IT Service Desk Agent.
@@ -38,7 +39,12 @@ If the issue directly impacts patient safety or care delivery:
 - Indicate this needs IMMEDIATE human attention in the ticket description.
 
 ### Step 5 — Intelligent Ticket Creation
-When creating a ticket (via createRequest), you MUST classify it properly:
+When creating a ticket (via createRequest), you MUST:
+1. First call assess_priority with the issue subject, description, user's suggested priority,
+   impact, and urgency. This tool runs a deterministic multi-signal analysis and returns
+   the verified priority.
+2. Use the verified priority from assess_priority when calling createRequest.
+3. Classify the ticket properly using the fields below.
 
 #### Impact + Urgency (ManageEngine auto-calculates priority):
 Do NOT set priority directly — ManageEngine derives it from impact + urgency.
@@ -160,5 +166,5 @@ def create_agent() -> Agent:
         client=client,
         name="CCAD ITSD Agent",
         instructions=SYSTEM_PROMPT,
-        tools=[search_kb, manage_engine_mcp],
+        tools=[search_kb, assess_priority, manage_engine_mcp],
     )
