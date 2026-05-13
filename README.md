@@ -1,6 +1,6 @@
 # Clinical ITSM Agent
 
-An AI-powered IT Service Management agent for **clinical / hospital environments**. Built with the [Microsoft Agent Framework](https://github.com/microsoft/agent-framework) (Python), Core42 Compass LLM (via Azure APIM), and ManageEngine ServiceDesk Plus via MCP.
+An AI-powered IT Service Management agent for **clinical / hospital environments**. Built with the [Microsoft Agent Framework](https://github.com/microsoft/agent-framework) (Python), GPT-4o (via Azure AI Foundry), and ManageEngine ServiceDesk Plus via MCP.
 
 ## What it does
 
@@ -46,7 +46,7 @@ graph LR
     subgraph LLMLayer["LLM Provider"]
         direction TB
         APIM_AI["☁️ Azure APIM<br/>(AI Gateway)"]
-        Core42["🧠 Core42 Compass<br/>(LLM)"]
+        GPT4o["🧠 GPT-4o<br/>(Azure AI Foundry)"]
     end
 
     subgraph Tools["Agent Tools & Services"]
@@ -77,7 +77,7 @@ graph LR
     WebUI --> FastAPI
     FastAPI --> Orchestrator
     Orchestrator --> APIM_AI
-    APIM_AI --> Core42
+    APIM_AI --> GPT4o
     Orchestrator --> SearchKB
     Orchestrator --> AssessPri
     Orchestrator --> MCPTools
@@ -92,7 +92,7 @@ graph LR
     class Phone,Teams,WhatsApp,WebUI channel
     class FastAPI platform
     class Orchestrator agent
-    class APIM_AI,Core42 llm
+    class APIM_AI,GPT4o llm
     class SearchKB,AssessPri,MCPTools,AIS,APIM_ME,ME tool
     class Monitor,KV,ManagedID azure
 ```
@@ -101,7 +101,7 @@ graph LR
 
 1. User contacts via any channel (Phone, Teams, WhatsApp, Web UI) → hits **FastAPI gateway** on Azure Container Apps
 2. Gateway routes to the **ITSD Supervisor Agent** (Microsoft Agent Framework)
-3. Agent calls **Core42 Compass** LLM through **Azure APIM** (AI Gateway) for reasoning
+3. Agent calls **GPT-4o** through **Azure AI Foundry** for reasoning
 4. Agent uses `search_kb` → **Azure AI Search** to find KB articles first (KB-first triage)
 5. Only if KB fails → Agent loads the `ticket-creation` **skill** on-demand (categories, groups, business rules)
 6. Agent calls `assess_priority` for deterministic multi-signal priority scoring (user input × impact/urgency matrix × text analysis)
@@ -255,8 +255,8 @@ curl -X POST http://localhost:8000/chat \
 | MAF: Agent | `Agent` — single-agent with tools and context providers |
 | MAF: MCP Client | `MCPStreamableHTTPTool` — connects to ManageEngine MCP server via HTTP |
 | MAF: Skills | `SkillsProvider` — progressive disclosure of business rules via `SKILL.md` files |
-| MAF: LLM Client | `FoundryChatClient` (dev) — will switch to `OpenAIChatClient` with `base_url` for Core42 |
-| LLM | Core42 Compass via Azure APIM (AI Gateway) |
+| MAF: LLM Client | `FoundryChatClient` — connects to GPT-4o via Azure AI Foundry |
+| LLM | GPT-4o via Azure AI Foundry |
 | Knowledge Base | Azure AI Search (semantic search, 33 KB articles) |
 | Ticketing | ManageEngine ServiceDesk Plus via MCP (APIM gateway, 17 tools) |
 | API | FastAPI + Uvicorn |
