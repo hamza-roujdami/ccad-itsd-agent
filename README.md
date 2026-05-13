@@ -251,13 +251,16 @@ curl -X POST http://localhost:8000/chat \
 
 | Component | Technology |
 |-----------|-----------|
-| Agent Framework | [Microsoft Agent Framework](https://github.com/microsoft/agent-framework) (Python) |
+| Agent Framework | [Microsoft Agent Framework](https://github.com/microsoft/agent-framework) (Python) v1.3.0 |
+| MAF: Agent | `Agent` — single-agent with tools and context providers |
+| MAF: MCP Client | `MCPStreamableHTTPTool` — connects to ManageEngine MCP server via HTTP |
+| MAF: Skills | `SkillsProvider` — progressive disclosure of business rules via `SKILL.md` files |
+| MAF: LLM Client | `FoundryChatClient` (dev) — will switch to `OpenAIChatClient` with `base_url` for Core42 |
 | LLM | Core42 Compass via Azure APIM (AI Gateway) |
-| Knowledge Base | Azure AI Search (semantic search) |
-| Ticketing | ManageEngine ServiceDesk Plus via MCP (APIM gateway) |
+| Knowledge Base | Azure AI Search (semantic search, 33 KB articles) |
+| Ticketing | ManageEngine ServiceDesk Plus via MCP (APIM gateway, 17 tools) |
 | API | FastAPI + Uvicorn |
-| Skills | MAF `SkillsProvider` (progressive disclosure, on-demand loading) |
-| Auth | Azure Identity (DefaultAzureCredential) |
+| Auth | Azure Identity (`DefaultAzureCredential`) |
 | Infra | Bicep (`infra/`) |
 
 ## API
