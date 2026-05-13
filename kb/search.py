@@ -13,7 +13,7 @@ from config import settings
 async def search_kb(
     query: Annotated[str, Field(description="Search query describing the user's IT issue")],
 ) -> str:
-    """Search the CCAD IT knowledge base for troubleshooting guides, FAQs, and known solutions.
+    """Search the clinical IT knowledge base for troubleshooting guides, FAQs, and known solutions.
     Use this BEFORE creating a ticket to check if the issue can be resolved with self-service steps."""
     credential = DefaultAzureCredential()
     async with SearchClient(

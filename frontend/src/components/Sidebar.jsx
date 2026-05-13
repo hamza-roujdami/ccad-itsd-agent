@@ -12,9 +12,9 @@ export default function Sidebar({
     <div className="sidebar">
       <div className="sidebar-header">
         <h1>
-          <span className="logo-dot" /> Agent Hub
+          CCAD ITSM Agent
         </h1>
-        <div className="subtitle">Multi-Agent Orchestration</div>
+        <div className="subtitle">IT Service Desk — AI-powered</div>
         <button className="new-chat-btn" onClick={onNew}>
           + New Conversation
         </button>

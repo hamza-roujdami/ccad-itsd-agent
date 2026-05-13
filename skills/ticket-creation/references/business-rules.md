@@ -1,4 +1,4 @@
-# CCAD Business Rules (MANDATORY)
+# Clinical Business Rules (MANDATORY)
 
 These rules override all other classification logic. Violating them will cause
 tickets to be rejected or misrouted.

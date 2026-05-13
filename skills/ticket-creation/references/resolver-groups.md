@@ -1,4 +1,4 @@
-# CCAD ManageEngine Resolver Groups
+# Clinical ManageEngine Resolver Groups
 
 Use `viewAllSupportGroups` to confirm current values. Route to the right team:
 

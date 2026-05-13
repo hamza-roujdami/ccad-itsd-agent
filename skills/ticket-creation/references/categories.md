@@ -1,4 +1,4 @@
-# CCAD ManageEngine Categories
+# Clinical ManageEngine Categories
 
 Use `viewAllCategories` to confirm current values. Pick the best match:
 

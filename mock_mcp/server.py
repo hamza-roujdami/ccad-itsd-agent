@@ -1,6 +1,6 @@
 """Mock ManageEngine MCP Server.
 
-Replicates the 17 tools from CCAD's real MCP server behind APIM.
+Replicates the 17 tools from the real MCP server behind APIM.
 Uses real ManageEngine field values from the production instance.
 Accepts the same CreateRequestPostRequest wrapper format as the real server.
 
@@ -17,7 +17,7 @@ mcp = FastMCP(
     port=8001,
 )
 
-# ── Real CCAD ManageEngine data ──────────────────────────────────────────
+# ── Real clinical ManageEngine data ────────────────────────────────────────────
 
 PRIORITIES = [
     {"id": "301", "name": "0.Patient Care", "priority_order": "301", "color": "#ef1616", "deleted": False, "description": None},
@@ -36,7 +36,7 @@ STATUSES = [
     {"id": "5", "name": "Closed", "internal_name": "Closed", "in_progress": False, "stop_timer": True, "color": "#333333"},
 ]
 
-# Real CCAD categories (from viewAllCategories — 24 total, showing confirmed ones)
+# Real clinical categories (from viewAllCategories — 24 total, showing confirmed ones)
 CATEGORIES = [
     {"id": "301", "name": "Hardware", "deleted": False, "description": None, "technician": None, "change_manager": None},
     {"id": "302", "name": "Software", "deleted": False, "description": None, "technician": None, "change_manager": None},
@@ -50,7 +50,7 @@ CATEGORIES = [
     {"id": "310", "name": "VDI", "deleted": False, "description": None, "technician": None, "change_manager": None},
 ]
 
-# Real CCAD support groups (from viewAllSupportGroups)
+# Real clinical support groups (from viewAllSupportGroups)
 SUPPORT_GROUPS = [
     {"id": "301", "name": "EPIC APPLICATIONS", "site": None, "deleted": False, "description": None, "sender_name": "", "sender_email_id": ""},
     {"id": "302", "name": "ASSET MANAGEMENT", "site": None, "deleted": False, "description": None, "sender_name": "", "sender_email_id": ""},
@@ -75,7 +75,7 @@ IMPACTS = [
     {"id": "3", "name": "Affects Business"},
 ]
 
-# Real CCAD modes (from viewAllModes)
+# Real clinical modes (from viewAllModes)
 MODES = [
     {"id": "1", "name": "E-Mail", "internal_name": "E-Mail", "deleted": False, "description": "Request through mail"},
     {"id": "2", "name": "Service Catalog", "internal_name": "Web Form", "deleted": False, "description": "Request through web form"},
@@ -88,7 +88,7 @@ SOLUTIONS = [
     {"id": "1", "topic": {"name": "Password & Access"}, "title": "How to reset your network password",
      "description": "1. Go to https://aka.ms/sspr\n2. Follow the prompts to verify identity\n3. Set a new password\n4. Update password on all devices"},
     {"id": "2", "topic": {"name": "VPN & Remote Access"}, "title": "VPN connection troubleshooting",
-     "description": "1. Use FortiClient VPN\n2. Connect to vpn.ccad.ae\n3. If failing: restart FortiClient service\n4. Clear DNS cache\n5. Check certificate expiry"},
+     "description": "1. Use FortiClient VPN\n2. Connect to vpn.clinic.example.com\n3. If failing: restart FortiClient service\n4. Clear DNS cache\n5. Check certificate expiry"},
     {"id": "3", "topic": {"name": "Printing"}, "title": "Printer not printing - basic troubleshooting",
      "description": "1. Check printer power and online status\n2. Check for paper jams\n3. Restart print spooler\n4. If using badge printing: re-enroll badge\n5. Re-add printer from print server"},
     {"id": "4", "topic": {"name": "Clinical Systems"}, "title": "Epic Hyperspace not launching",
@@ -106,10 +106,10 @@ SERVICE_TEMPLATES = [
 ]
 
 USERS = [
-    {"id": "1001", "name": "Dr. Sarah Ahmed", "email_id": "sarah.ahmed@ccad.ae", "department": {"name": "Cardiology"}, "is_technician": False},
-    {"id": "1002", "name": "Nurse Fatima Ali", "email_id": "fatima.ali@ccad.ae", "department": {"name": "ICU"}, "is_technician": False},
-    {"id": "1003", "name": "Ahmad Hassan", "email_id": "ahmad.hassan@ccad.ae", "department": {"name": "IT"}, "is_technician": True},
-    {"id": "1004", "name": "Yahia Bitar", "email_id": "bitary@ccad.ae", "department": {"name": "IT"}, "is_technician": True},
+    {"id": "1001", "name": "Dr. Sarah Ahmed", "email_id": "sarah.ahmed@clinic.example.com", "department": {"name": "Cardiology"}, "is_technician": False},
+    {"id": "1002", "name": "Nurse Fatima Ali", "email_id": "fatima.ali@clinic.example.com", "department": {"name": "ICU"}, "is_technician": False},
+    {"id": "1003", "name": "Ahmad Hassan", "email_id": "ahmad.hassan@clinic.example.com", "department": {"name": "IT"}, "is_technician": True},
+    {"id": "1004", "name": "Yahia Bitar", "email_id": "bitary@clinic.example.com", "department": {"name": "IT"}, "is_technician": True},
 ]
 
 REQUEST_FILTERS = [
@@ -123,7 +123,7 @@ REQUEST_FILTERS = [
 # ── In-memory request store ──────────────────────────────────────────────
 
 _requests: dict[str, dict] = {}
-_next_id = 32200  # Start after real CCAD ticket IDs
+_next_id = 32200  # Start after real ticket IDs
 
 
 def _gen_id() -> str:

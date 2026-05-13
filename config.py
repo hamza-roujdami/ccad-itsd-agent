@@ -1,4 +1,4 @@
-"""CCAD ITSD Agent — Configuration."""
+"""Clinical ITSM Agent — Configuration."""
 
 import os
 from pydantic_settings import BaseSettings

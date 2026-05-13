@@ -10,9 +10,9 @@ user to the appropriate department:
 
 | Department | Contact | Examples |
 |-----------|---------|---------|
-| HR | hr@ccad.ae | Time off, payroll, benefits, onboarding, policies |
-| Facilities | facilities@ccad.ae | Maintenance, HVAC, lighting, office space, keys |
-| Operations | operations@ccad.ae | Scheduling, supplies, logistics, transport |
+| HR | hr@clinic.example.com | Time off, payroll, benefits, onboarding, policies |
+| Facilities | facilities@clinic.example.com | Maintenance, HVAC, lighting, office space, keys |
+| Operations | operations@clinic.example.com | Scheduling, supplies, logistics, transport |
 
 ### Guidelines
 - Politely explain this is outside IT scope

@@ -4,9 +4,9 @@ Adapted from factory-code's priority intelligence engine. Uses four signals:
 1. User-suggested priority
 2. Impact × Urgency business matrix
 3. AI text analysis (keyword-based severity detection)
-4. Patient care keyword detection (CCAD-specific)
+4. Patient care keyword detection (clinical-specific)
 
-Returns a verified priority mapped to ManageEngine's CCAD priority scale:
+Returns a verified priority mapped to ManageEngine's clinical priority scale:
   0.Patient Care | 1.Critical | 2.High | 3.Normal | 4.Low
 """
 
@@ -15,7 +15,7 @@ from typing import Annotated
 
 from agent_framework import tool
 
-# ── CCAD ManageEngine priorities (ordered by severity) ───────────────────
+# ── Clinical ManageEngine priorities (ordered by severity) ─────────────────────
 
 PRIORITY_ORDER = {
     "4.Low": 1,
@@ -87,7 +87,7 @@ def _normalize_urgency(urgency: str) -> str:
 
 
 def _normalize_user_priority(priority: str) -> str:
-    """Map free-text priority to CCAD ManageEngine priority names."""
+    """Map free-text priority to ManageEngine priority names."""
     p = (priority or "").strip().lower()
     if "patient" in p or p == "0":
         return "0.Patient Care"

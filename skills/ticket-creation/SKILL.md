@@ -1,6 +1,6 @@
 ---
 name: ticket-creation
-description: Create ManageEngine ServiceDesk Plus tickets with correct classification, priority verification, and CCAD business rules. Load this skill when a user needs a new IT ticket created.
+description: Create ManageEngine ServiceDesk Plus tickets with correct classification, priority verification, and clinical business rules. Load this skill when a user needs a new IT ticket created.
 ---
 
 ## Ticket Creation Workflow
@@ -36,13 +36,13 @@ Always set mode to `{"name": "E-Mail"}` for agent-created tickets.
 #### Service Templates
 Use `getServiceTemplates` to find the right template. Templates auto-populate downstream fields.
 
-### Step 3 — Apply CCAD Business Rules
+### Step 3 — Apply Clinical Business Rules
 Read `references/business-rules.md` for mandatory business rules before submitting.
 
 ### Step 4 — Mandatory Fields
 Every ticket MUST include these 5 fields or creation will fail:
 1. `subject` — short summary
-2. `requester` — `{"email_id": "user@ccad.ae"}`
+2. `requester` — `{"email_id": "user@clinic.example.com"}`
 3. `mode` — `{"name": "E-Mail"}`
 4. `group` — `{"name": "SERVICE DESK"}` (or appropriate team)
 5. `category` — `{"name": "Software"}` (or appropriate category)

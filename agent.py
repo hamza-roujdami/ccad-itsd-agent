@@ -1,4 +1,4 @@
-"""CCAD ITSD Agent — Agent definition."""
+"""Clinical ITSM Agent — Agent definition."""
 
 from pathlib import Path
 
@@ -11,7 +11,7 @@ from kb.search import search_kb
 from kb.priority import assess_priority
 
 SYSTEM_PROMPT = """\
-You are the CCAD (Cleveland Clinic Abu Dhabi) IT Service Desk Agent.
+You are the Clinical IT Service Desk Agent.
 You help clinicians, nurses, doctors, and IT staff resolve technical issues.
 Your goal is to SOLVE the issue first, and only create a ticket if self-service fails.
 
@@ -46,7 +46,7 @@ Your goal is to SOLVE the issue first, and only create a ticket if self-service 
 
 
 def create_agent() -> Agent:
-    """Build and return the CCAD ITSD agent."""
+    """Build and return the Clinical ITSM agent."""
     client = FoundryChatClient(
         project_endpoint=settings.foundry_project_endpoint,
         model=settings.foundry_model,
@@ -64,7 +64,7 @@ def create_agent() -> Agent:
 
     manage_engine_mcp = MCPStreamableHTTPTool(
         name="ManageEngine",
-        description="ManageEngine ServiceDesk Plus — ITSM ticketing system for CCAD",
+        description="ManageEngine ServiceDesk Plus — ITSM ticketing system",
         url=settings.mcp_server_url,
         header_provider=(lambda _kwargs: headers) if headers else None,
         approval_mode="never_require",
@@ -73,7 +73,7 @@ def create_agent() -> Agent:
 
     return Agent(
         client=client,
-        name="CCAD ITSD Agent",
+        name="Clinical ITSM Agent",
         instructions=SYSTEM_PROMPT,
         tools=[search_kb, assess_priority, manage_engine_mcp],
         context_providers=[skills_provider],

@@ -1,4 +1,4 @@
-"""CCAD ITSD Agent — FastAPI server.
+"""Clinical ITSM Agent — FastAPI server.
 
 Endpoints:
   POST /chat          — JSON chat (for testing / API consumers)
@@ -29,7 +29,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="CCAD ITSD Agent",
+    title="Clinical ITSM Agent",
     version="0.1.0",
     lifespan=lifespan,
 )
@@ -81,14 +81,14 @@ async def chat(req: ChatRequest):
                     if hasattr(c, 'type') and c.type == 'function_call' and hasattr(c, 'name') and c.name:
                         name = c.name
                         if name == "search_kb":
-                            tools_used.append("CCAD Knowledge Base")
+                            tools_used.append("Clinical Knowledge Base")
                         elif name.startswith("ManageEngine_") or name in (
                             "createRequest", "requestDetailsById", "updateRequest", "addNote",
                             "viewAllRequests", "viewAllPriorities", "viewAllStatuses",
                             "viewAllCategories", "viewAllSupportGroups", "viewAllModes",
                             "viewAllImpacts", "viewAllUrgencies", "viewAllSolutions",
                             "viewAllRequestFilters", "getServiceTemplates", "getUserDetails"):
-                            tools_used.append("CCAD ManageEngine")
+                            tools_used.append("Clinical ManageEngine")
                         else:
                             tools_used.append(name)
     except Exception:

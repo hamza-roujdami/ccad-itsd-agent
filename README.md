@@ -1,6 +1,6 @@
-# CCAD ITSM Agent
+# Clinical ITSM Agent
 
-An AI-powered IT Service Management agent for **Cleveland Clinic Abu Dhabi (CCAD)**. Built with the [Microsoft Agent Framework](https://github.com/microsoft/agent-framework) (Python), Core42 Compass LLM (via Azure APIM), and ManageEngine ServiceDesk Plus via MCP.
+An AI-powered IT Service Management agent for **clinical / hospital environments**. Built with the [Microsoft Agent Framework](https://github.com/microsoft/agent-framework) (Python), Core42 Compass LLM (via Azure APIM), and ManageEngine ServiceDesk Plus via MCP.
 
 ## What it does
 
@@ -8,7 +8,7 @@ The agent acts as the **first line of IT support** for clinicians, nurses, and s
 
 1. **Understands the issue** — parses natural language IT requests and asks clarifying questions
 2. **Searches the knowledge base first** — looks up troubleshooting guides and FAQs before creating tickets
-3. **Creates and manages tickets intelligently** — classifies priority, category, and resolver group using CCAD's ITSM taxonomy
+3. **Creates and manages tickets intelligently** — classifies priority, category, and resolver group using the hospital's ITSM taxonomy
 4. **Escalates with full context** — when self-service fails, creates a ticket with conversation summary so human resolvers can pick up seamlessly
 5. **Routes non-IT requests** — directs HR, Facilities, and Operations questions to the right contact
 
@@ -113,7 +113,7 @@ graph LR
 ## Project structure
 
 ```
-ccad-itsm-agent/
+clinical-itsm-agent/
 ├── agent.py              ← Agent definition (slim prompt, tools, skills, MCP)
 ├── server.py             ← FastAPI server (/chat, /health, tools_used tracking)
 ├── config.py             ← Settings (reads from .env)
@@ -122,7 +122,7 @@ ccad-itsm-agent/
 │   ├── search.py         ← search_kb @tool (Azure AI Search, semantic search)
 │   ├── priority.py       ← assess_priority @tool (multi-signal priority verification)
 │   ├── index_kb.py       ← Indexer script (Excel → Azure AI Search)
-│   ├── solutions_kb.xlsx ← 33 IT knowledge base articles from CCAD
+│   ├── solutions_kb.xlsx ← 33 IT knowledge base articles
 │   └── README.md         ← KB docs
 ├── skills/                ← MAF Skills (loaded on-demand, saves tokens)
 │   ├── ticket-creation/
@@ -130,14 +130,14 @@ ccad-itsm-agent/
 │   │   └── references/
 │   │       ├── categories.md       ← ManageEngine categories
 │   │       ├── resolver-groups.md  ← Support group routing
-│   │       └── business-rules.md   ← CCAD business rules
+│   │       └── business-rules.md   ← Clinical business rules
 │   ├── ticket-management/
 │   │   └── SKILL.md       ← Check status, add notes, update, list tickets
 │   └── non-it-routing/
 │       └── SKILL.md       ← HR/Facilities/Operations contacts
 ├── mock_mcp/
 │   ├── __init__.py
-│   └── server.py         ← Mock ManageEngine MCP server (17 tools, real CCAD values)
+│   └── server.py         ← Mock ManageEngine MCP server (17 tools)
 ├── frontend/             ← React chat UI
 │   ├── src/
 │   └── package.json
@@ -158,7 +158,7 @@ ccad-itsm-agent/
 
 ```bash
 git clone https://github.com/hamza-roujdami/ccad-itsd-agent.git
-cd ccad-itsd-agent
+cd clinical-itsm-agent
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev,mock]"
@@ -182,7 +182,7 @@ MCP_SERVER_URL=http://localhost:8001/mcp
 
 ### Index the knowledge base
 
-Populate the Azure AI Search index with the 33 CCAD KB articles:
+Populate the Azure AI Search index with the 33 KB articles:
 
 ```bash
 python -m kb.index_kb
@@ -216,14 +216,14 @@ Open **http://localhost:3000** in your browser.
 
 The chat UI shows which tool was used for each response:
 
-- **CCAD Knowledge Base** — answered from KB articles (no ticket created)
-- **CCAD ManageEngine** — ticket created/read/updated via ManageEngine MCP
-- **CCAD_ITSM_AGENT** — no tools used (greetings, clarifying questions, non-IT routing)
+- **Clinical Knowledge Base** — answered from KB articles (no ticket created)
+- **Clinical ManageEngine** — ticket created/read/updated via ManageEngine MCP
+- **Clinical_ITSM_AGENT** — no tools used (greetings, clarifying questions, non-IT routing)
 
 Try these prompts:
 
 ```
-How do I reset my CCAD password?              → KB answer, no ticket
+How do I reset my password?                    → KB answer, no ticket
 My laptop screen is cracked                    → asks clarifying questions
 Epic is down for the whole department          → creates urgent ticket
 How do I apply for annual leave?               → redirects to HR
@@ -239,7 +239,7 @@ curl http://localhost:8000/health
 # Chat — KB question (no ticket created)
 curl -X POST http://localhost:8000/chat \
   -H "Content-Type: application/json" \
-  -d '{"message": "How do I reset my CCAD password?"}'
+  -d '{"message": "How do I reset my password?"}'
 
 # Chat — Issue requiring ticket
 curl -X POST http://localhost:8000/chat \
