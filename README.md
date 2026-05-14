@@ -97,6 +97,102 @@ graph LR
     class Monitor,KV,ManagedID azure
 ```
 
+### Agent Internals — Skills, Tools & MCP
+
+```mermaid
+graph TB
+    classDef prompt fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px,color:#1B5E20
+    classDef tool fill:#E3F2FD,stroke:#1565C0,stroke-width:2px,color:#0D47A1
+    classDef skill fill:#FFF8E1,stroke:#F9A825,stroke-width:2px,color:#795548
+    classDef resource fill:#FFF3E0,stroke:#E65100,stroke-width:1px,color:#BF360C
+    classDef external fill:#FCE4EC,stroke:#C62828,stroke-width:2px,color:#B71C1C
+    classDef history fill:#F3E5F5,stroke:#6A1B9A,stroke-width:2px,color:#4A148C
+
+    User["💬 User Message"]
+
+    subgraph Agent["Clinical ITSM Agent (MAF)"]
+        direction TB
+        Prompt["📋 System Prompt<br/>(slim ~400 tokens)<br/>6-step workflow"]
+        LLM["🧠 GPT-4o<br/>(Azure AI Foundry)"]
+    end
+
+    subgraph ToolsLayer["Native Tools"]
+        direction TB
+        SearchKB["🔍 search_kb<br/>Azure AI Search<br/>(33 KB articles)"]
+        AssessPri["⚖️ assess_priority<br/>Multi-signal scoring<br/>(user × matrix × text)"]
+    end
+
+    subgraph SkillsLayer["Skills (on-demand via SkillsProvider)"]
+        direction TB
+
+        subgraph S1["ticket-creation"]
+            direction TB
+            SK1["📄 SKILL.md<br/>Ticket workflow +<br/>mandatory fields"]
+            R1["📎 categories.md"]
+            R2["📎 resolver-groups.md"]
+            R3["📎 business-rules.md"]
+        end
+
+        subgraph S2["clinical-triage"]
+            direction TB
+            SK2["📄 SKILL.md<br/>Decision tree:<br/>Equipment / Epic /<br/>Non-Epic Apps"]
+        end
+
+        subgraph S3["ticket-management"]
+            direction TB
+            SK3["📄 SKILL.md<br/>Status, notes,<br/>updates, listing"]
+        end
+
+        subgraph S4["non-it-routing"]
+            direction TB
+            SK4["📄 SKILL.md<br/>HR / Facilities /<br/>Operations contacts"]
+        end
+    end
+
+    subgraph MCPLayer["MCP Tools (ManageEngine)"]
+        direction TB
+        MCP["🔧 MCPStreamableHTTPTool<br/>(17 tools via APIM)"]
+        CR["createRequest"]
+        RD["requestDetailsById"]
+        AN["addNote"]
+        UR["updateRequest"]
+        VR["viewAllRequests"]
+        VC["viewAllCategories"]
+    end
+
+    subgraph HistoryLayer["Conversation History"]
+        direction TB
+        HP["📚 HistoryProvider<br/>CosmosDB (prod)<br/>FileHistory (dev)"]
+    end
+
+    User --> Prompt
+    Prompt --> LLM
+    LLM --> SearchKB
+    LLM --> AssessPri
+    LLM -->|"load_skill"| S1
+    LLM -->|"load_skill"| S2
+    LLM -->|"load_skill"| S3
+    LLM -->|"load_skill"| S4
+    SK1 -->|"read_skill_resource"| R1
+    SK1 -->|"read_skill_resource"| R2
+    SK1 -->|"read_skill_resource"| R3
+    LLM --> MCP
+    MCP --> CR
+    MCP --> RD
+    MCP --> AN
+    MCP --> UR
+    MCP --> VR
+    MCP --> VC
+    LLM -.-> HP
+
+    class Prompt prompt
+    class SearchKB,AssessPri tool
+    class SK1,SK2,SK3,SK4 skill
+    class R1,R2,R3 resource
+    class MCP,CR,RD,AN,UR,VR,VC external
+    class HP history
+```
+
 ### Data Flow
 
 1. User contacts via any channel (Phone, Teams, WhatsApp, Web UI) → hits **FastAPI gateway** on Azure Container Apps
@@ -133,6 +229,8 @@ clinical-itsm-agent/
 │   │       └── business-rules.md   ← Clinical business rules
 │   ├── ticket-management/
 │   │   └── SKILL.md       ← Check status, add notes, update, list tickets
+│   ├── clinical-triage/
+│   │   └── SKILL.md       ← Patient care decision tree (equipment / Epic / non-Epic)
 │   └── non-it-routing/
 │       └── SKILL.md       ← HR/Facilities/Operations contacts
 ├── mock_mcp/
@@ -141,7 +239,7 @@ clinical-itsm-agent/
 ├── frontend/             ← React chat UI
 │   ├── src/
 │   └── package.json
-├── infra/                ← Azure Bicep (AI Search, Key Vault, Monitoring)
+├── infra/                ← Azure Bicep (AI Foundry, AI Search, Cosmos DB, Key Vault, Monitoring)
 └── tests/
 ```
 
@@ -151,7 +249,7 @@ clinical-itsm-agent/
 
 - Python 3.11+
 - Azure CLI logged in (`az login`) with access to:
-  - LLM endpoint (Core42 Compass via APIM, or Azure AI Foundry for dev)
+  - LLM endpoint (Azure AI Foundry with GPT-4o)
   - Azure AI Search (with `itsd-kb` index populated)
 
 ### Setup
