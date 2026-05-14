@@ -389,6 +389,40 @@ Response:
 
 Returns `{"status": "ok"}`.
 
+## Monitoring & Observability
+
+The agent emits OpenTelemetry traces (GenAI semantic conventions) to **Azure Application Insights**.
+
+### Setup
+
+Set the connection string in `.env`:
+
+```env
+APPLICATIONINSIGHTS_CONNECTION_STRING=InstrumentationKey=xxx;IngestionEndpoint=https://xxx
+```
+
+The server auto-configures Azure Monitor exporters (traces, metrics, logs) on startup.
+
+### What you see in App Insights
+
+Navigate to **Azure Portal → App Insights → Agents (Preview)**:
+
+- **Agent Runs** — total invocations, success rate, response time trends
+- **Tool Calls** — which tools were called (`search_kb`, `assess_priority`, `createRequest`, `load_skill`), call count, latency, errors
+- **Models** — GPT-4o token usage, avg duration, call count
+- **Gen AI Errors** — failed LLM or tool calls
+- **Transaction Search** — drill into individual agent runs with end-to-end trace view
+- **Grafana dashboards** — pre-built Agent Framework dashboards available via "Explore in Grafana"
+
+### Running eval tests
+
+```bash
+# Requires: agent server on :8000 + mock MCP on :8001
+python -m pytest tests/test_eval.py -v
+```
+
+11 automated tests covering KB resolution, non-IT routing, priority verification, ticket creation, ticket management, and multi-turn conversations.
+
 ## KB content
 
 33 articles covering: Cisco Phone, Printing, Epic, Passwords, VPN, VDI, MFA, MS Teams, Intune, PowerMic, Email, Monitors, and more. See [`data/README.md`](data/README.md).

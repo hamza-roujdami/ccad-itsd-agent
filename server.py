@@ -6,7 +6,6 @@ Endpoints:
 """
 
 import logging
-import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -18,25 +17,44 @@ from config import settings
 
 logger = logging.getLogger(__name__)
 
-# ── Observability ────────────────────────────────────────────────────────
-# Set OTEL env var before importing MAF observability so it picks up App Insights
-if settings.applicationinsights_connection_string:
-    os.environ.setdefault(
-        "APPLICATIONINSIGHTS_CONNECTION_STRING",
-        settings.applicationinsights_connection_string,
-    )
-
-try:
-    from agent_framework.observability import configure_otel_providers
-    configure_otel_providers(enable_sensitive_data=False)
-    logger.info("OpenTelemetry configured (App Insights: %s)",
-                "enabled" if settings.applicationinsights_connection_string else "console-only")
-except Exception as e:
-    logger.warning("OpenTelemetry setup skipped: %s", e)
-
 _agent = None
 _history_provider = None
 _sessions: dict[str, object] = {}
+_otel_initialized = False
+
+
+def _setup_observability():
+    """Configure OpenTelemetry with Azure Monitor exporters. Safe to call multiple times."""
+    global _otel_initialized
+    if _otel_initialized:
+        return
+    _otel_initialized = True
+
+    try:
+        from agent_framework.observability import configure_otel_providers
+
+        exporters = []
+        if settings.applicationinsights_connection_string:
+            from azure.monitor.opentelemetry.exporter import (
+                AzureMonitorTraceExporter,
+                AzureMonitorMetricExporter,
+                AzureMonitorLogExporter,
+            )
+            conn_str = settings.applicationinsights_connection_string
+            exporters = [
+                AzureMonitorTraceExporter(connection_string=conn_str),
+                AzureMonitorMetricExporter(connection_string=conn_str),
+                AzureMonitorLogExporter(connection_string=conn_str),
+            ]
+            logger.info("OpenTelemetry: Azure Monitor exporters configured")
+
+        configure_otel_providers(
+            enable_sensitive_data=False,
+            exporters=exporters or None,
+        )
+        logger.info("OpenTelemetry providers initialized")
+    except Exception as e:
+        logger.warning("OpenTelemetry setup skipped: %s", e)
 
 
 def _create_history_provider():
@@ -59,8 +77,9 @@ def _create_history_provider():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Manage agent lifecycle (MCP connections)."""
+    """Manage agent lifecycle (MCP connections + observability)."""
     global _agent, _history_provider
+    _setup_observability()
     _history_provider = _create_history_provider()
     _agent = create_agent(history_provider=_history_provider)
     async with _agent:
