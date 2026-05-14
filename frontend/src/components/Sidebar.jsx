@@ -12,7 +12,7 @@ export default function Sidebar({
     <div className="sidebar">
       <div className="sidebar-header">
         <h1>
-          CCAD ITSM Agent
+          Clinical ITSM Agent
         </h1>
         <div className="subtitle">IT Service Desk — AI-powered</div>
         <button className="new-chat-btn" onClick={onNew}>

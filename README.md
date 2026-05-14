@@ -256,9 +256,11 @@ curl -X POST http://localhost:8000/chat \
 | MAF: MCP Client | `MCPStreamableHTTPTool` — connects to ManageEngine MCP server via HTTP |
 | MAF: Skills | `SkillsProvider` — progressive disclosure of business rules via `SKILL.md` files |
 | MAF: LLM Client | `FoundryChatClient` — connects to GPT-4o via Azure AI Foundry |
+| MAF: History | `CosmosHistoryProvider` (prod) / `FileHistoryProvider` (dev) — persistent conversation history |
 | LLM | GPT-4o via Azure AI Foundry |
 | Knowledge Base | Azure AI Search (semantic search, 33 KB articles) |
 | Ticketing | ManageEngine ServiceDesk Plus via MCP (APIM gateway, 17 tools) |
+| Conversation Store | Azure Cosmos DB NoSQL (serverless) — falls back to local JSON files |
 | API | FastAPI + Uvicorn |
 | Auth | Azure Identity (`DefaultAzureCredential`) |
 | Infra | Bicep (`infra/`) |

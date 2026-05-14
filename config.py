@@ -19,6 +19,11 @@ class Settings(BaseSettings):
     # APIM (for production MCP access)
     apim_subscription_key: str = ""
 
+    # Cosmos DB (conversation history)
+    cosmos_endpoint: str = ""
+    cosmos_database: str = "agent-framework"
+    cosmos_container: str = "chat-history"
+
     # Server
     host: str = "0.0.0.0"
     port: int = 8000

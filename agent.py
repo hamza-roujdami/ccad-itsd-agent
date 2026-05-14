@@ -4,6 +4,7 @@ from pathlib import Path
 
 from agent_framework import Agent, MCPStreamableHTTPTool, SkillsProvider
 from agent_framework.foundry import FoundryChatClient
+from agent_framework._sessions import HistoryProvider
 from azure.identity import DefaultAzureCredential
 
 from config import settings
@@ -45,7 +46,7 @@ Your goal is to SOLVE the issue first, and only create a ticket if self-service 
 """
 
 
-def create_agent() -> Agent:
+def create_agent(history_provider: HistoryProvider | None = None) -> Agent:
     """Build and return the Clinical ITSM agent."""
     client = FoundryChatClient(
         project_endpoint=settings.foundry_project_endpoint,
@@ -71,10 +72,14 @@ def create_agent() -> Agent:
         load_prompts=False,
     )
 
+    context_providers = [skills_provider]
+    if history_provider:
+        context_providers.append(history_provider)
+
     return Agent(
         client=client,
         name="Clinical ITSM Agent",
         instructions=SYSTEM_PROMPT,
         tools=[search_kb, assess_priority, manage_engine_mcp],
-        context_providers=[skills_provider],
+        context_providers=context_providers,
     )

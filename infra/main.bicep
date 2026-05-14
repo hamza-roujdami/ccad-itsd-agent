@@ -35,6 +35,7 @@ var names = {
   foundryProject: 'aiproj-${resourceToken}'
   search: 'search-${resourceToken}'
   keyVault: 'kv-${resourceToken}'
+  cosmos: 'cosmos-${resourceToken}'
   logAnalytics: 'log-${resourceToken}'
   appInsights: 'appi-${resourceToken}'
 }
@@ -88,6 +89,16 @@ module aiFoundry 'modules/ai-foundry.bicep' = {
   }
 }
 
+module cosmosDb 'modules/cosmos-db.bicep' = {
+  name: 'cosmosDb'
+  params: {
+    cosmosAccountName: names.cosmos
+    location: location
+    principalId: principalId
+    principalType: principalType
+  }
+}
+
 // ----------------------------------------------------------------------
 // Outputs
 // ----------------------------------------------------------------------
@@ -98,5 +109,8 @@ output AZURE_EMBEDDING_DEPLOYMENT string = 'text-embedding-3-large'
 output AZURE_SEARCH_ENDPOINT string = aiSearch.outputs.searchServiceEndpoint
 output AZURE_SEARCH_INDEX string = 'itsd-kb'
 output AZURE_KEY_VAULT_NAME string = keyVault.outputs.keyVaultName
+output AZURE_COSMOS_ENDPOINT string = cosmosDb.outputs.cosmosAccountEndpoint
+output AZURE_COSMOS_DATABASE string = cosmosDb.outputs.databaseName
+output AZURE_COSMOS_CONTAINER string = cosmosDb.outputs.containerName
 output AZURE_APPINSIGHTS_CONNECTION_STRING string = monitoring.outputs.appInsightsConnectionString
 output AZURE_FOUNDRY_PROJECT_NAME string = aiFoundry.outputs.foundryProjectName

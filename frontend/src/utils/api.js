@@ -16,7 +16,7 @@ export async function sendMessage(conversationId, message) {
   const data = await res.json();
   // Map our response format to what the UI expects
   // Build agent_name from tools used
-  let agentLabel = "CCAD_ITSM_AGENT";
+  let agentLabel = "Clinical_ITSM_AGENT";
   if (data.tools_used && data.tools_used.length > 0) {
     agentLabel = data.tools_used.join(" → ");
   }

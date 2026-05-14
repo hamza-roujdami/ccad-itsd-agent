@@ -5,6 +5,7 @@ Endpoints:
   GET  /health        — Health check
 """
 
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -14,15 +15,37 @@ from pydantic import BaseModel
 from agent import create_agent
 from config import settings
 
+logger = logging.getLogger(__name__)
+
 _agent = None
+_history_provider = None
 _sessions: dict[str, object] = {}
+
+
+def _create_history_provider():
+    """Create history provider: Cosmos DB if configured, else FileHistoryProvider."""
+    if settings.cosmos_endpoint:
+        from azure.identity.aio import DefaultAzureCredential as AsyncDefaultAzureCredential
+        from agent_framework_azure_cosmos import CosmosHistoryProvider
+        logger.info("Using CosmosHistoryProvider (%s)", settings.cosmos_endpoint)
+        return CosmosHistoryProvider(
+            endpoint=settings.cosmos_endpoint,
+            credential=AsyncDefaultAzureCredential(),
+            database_name=settings.cosmos_database,
+            container_name=settings.cosmos_container,
+        )
+    else:
+        from agent_framework import FileHistoryProvider
+        logger.info("Using FileHistoryProvider (./conversations)")
+        return FileHistoryProvider(storage_path="./conversations")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Manage agent lifecycle (MCP connections)."""
-    global _agent
-    _agent = create_agent()
+    global _agent, _history_provider
+    _history_provider = _create_history_provider()
+    _agent = create_agent(history_provider=_history_provider)
     async with _agent:
         yield
     _agent = None

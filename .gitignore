@@ -18,3 +18,9 @@ build/
 frontend/node_modules/
 frontend/package-lock.json
 ~$*
+
+# Customer documents (confidential)
+references/customer-docs/
+
+# Local conversation history
+conversations/
