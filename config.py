@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     cosmos_database: str = "agent-framework"
     cosmos_container: str = "chat-history"
 
+    # Observability
+    applicationinsights_connection_string: str = ""
+
     # Server
     host: str = "0.0.0.0"
     port: int = 8000
