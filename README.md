@@ -241,6 +241,7 @@ clinical-itsm-agent/
 │   └── package.json
 ├── infra/                ← Azure Bicep (AI Foundry, AI Search, Cosmos DB, Key Vault, Monitoring)
 └── tests/
+    └── test_eval.py      ← 11 automated eval tests (KB, routing, priority, tickets, multi-turn)
 ```
 
 ## Quick start
@@ -360,6 +361,8 @@ curl -X POST http://localhost:8000/chat \
 | Ticketing | ManageEngine ServiceDesk Plus via MCP (APIM gateway, 17 tools) |
 | Conversation Store | Azure Cosmos DB NoSQL (serverless) — falls back to local JSON files |
 | API | FastAPI + Uvicorn |
+| Observability | OpenTelemetry via MAF `configure_otel_providers()` → Azure App Insights |
+| Eval | pytest test suite — 11 automated tests covering all agent flows |
 | Auth | Azure Identity (`DefaultAzureCredential`) |
 | Infra | Bicep (`infra/`) |
 
