@@ -1,8 +1,8 @@
 """Clinical ITSM Agent — FastAPI server.
 
 Endpoints:
-  POST /chat          — JSON chat (for testing / API consumers)
-  GET  /health        — Health check
+  POST /chat   — JSON chat (for testing / API consumers)
+  GET  /health — Health check
 """
 
 import logging
@@ -82,6 +82,13 @@ async def lifespan(app: FastAPI):
     _setup_observability()
     _history_provider = _create_history_provider()
     _agent = create_agent(history_provider=_history_provider)
+
+    # Enable voice channel if ACS is configured
+    if settings.acs_connection_string:
+        from voice import call_router, init_call_client
+        app.include_router(call_router)
+        init_call_client(settings.acs_callback_base_url)
+
     async with _agent:
         yield
     _agent = None

@@ -15,6 +15,7 @@ dependencies = [
     "azure-identity>=1.17",
     "aiohttp>=3.9",
     "python-dotenv>=1.0",
+    "azure-communication-callautomation>=1.4.0",
 ]
 
 [project.optional-dependencies]
@@ -28,5 +29,5 @@ mock = [
 ]
 
 [tool.setuptools]
-py-modules = ["agent", "config", "server"]
+py-modules = ["agent", "config", "server", "call_handler"]
 packages = ["kb", "mock_mcp", "tests"]

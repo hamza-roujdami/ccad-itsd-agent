@@ -38,6 +38,7 @@ var names = {
   cosmos: 'cosmos-${resourceToken}'
   logAnalytics: 'log-${resourceToken}'
   appInsights: 'appi-${resourceToken}'
+  communication: 'acs-${resourceToken}'
 }
 
 // ----------------------------------------------------------------------
@@ -99,6 +100,13 @@ module cosmosDb 'modules/cosmos-db.bicep' = {
   }
 }
 
+module communicationServices 'modules/communication-services.bicep' = {
+  name: 'communicationServices'
+  params: {
+    communicationServiceName: names.communication
+  }
+}
+
 // ----------------------------------------------------------------------
 // Outputs
 // ----------------------------------------------------------------------
@@ -114,3 +122,4 @@ output AZURE_COSMOS_DATABASE string = cosmosDb.outputs.databaseName
 output AZURE_COSMOS_CONTAINER string = cosmosDb.outputs.containerName
 output AZURE_APPINSIGHTS_CONNECTION_STRING string = monitoring.outputs.appInsightsConnectionString
 output AZURE_FOUNDRY_PROJECT_NAME string = aiFoundry.outputs.foundryProjectName
+output AZURE_COMMUNICATION_SERVICE_NAME string = communicationServices.outputs.communicationServiceName

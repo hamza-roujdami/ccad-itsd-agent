@@ -24,6 +24,11 @@ class Settings(BaseSettings):
     cosmos_database: str = "agent-framework"
     cosmos_container: str = "chat-history"
 
+    # Azure Communication Services (telephony)
+    acs_connection_string: str = ""
+    acs_callback_base_url: str = ""  # Public URL for ACS webhooks (e.g. dev tunnel)
+    acs_cognitive_services_endpoint: str = ""  # AI Services endpoint for STT/TTS in calls
+
     # Observability
     applicationinsights_connection_string: str = ""
 
