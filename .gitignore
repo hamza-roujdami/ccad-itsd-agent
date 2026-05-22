@@ -23,9 +23,7 @@ frontend/package-lock.json
 references/customer-docs/
 
 # Reference repos (cloned, not ours)
-references/CCADITSM/
-references/agent-framework/
-references/bicep-ptn-aiml-landing-zone/
+references/
 
 # Local conversation history
 conversations/
