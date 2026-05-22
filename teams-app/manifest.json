@@ -1,0 +1,41 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.19/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.19",
+  "version": "1.0.0",
+  "id": "{{APP_ID}}",
+  "developer": {
+    "name": "Clinical ITSM",
+    "websiteUrl": "{{BASE_URL}}",
+    "privacyUrl": "{{BASE_URL}}/privacy",
+    "termsOfUseUrl": "{{BASE_URL}}/terms"
+  },
+  "name": {
+    "short": "IT Service Desk",
+    "full": "Clinical ITSM Agent — AI-Powered IT Service Desk"
+  },
+  "description": {
+    "short": "AI-powered IT support for clinicians and staff",
+    "full": "Get instant IT support — search the knowledge base, create and track tickets, and get help with clinical systems. Powered by AI with ManageEngine integration."
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#1565C0",
+  "staticTabs": [
+    {
+      "entityId": "itsd-chat",
+      "name": "IT Support",
+      "contentUrl": "{{BASE_URL}}?inTeams=true",
+      "scopes": ["personal"]
+    }
+  ],
+  "permissions": ["identity"],
+  "validDomains": [
+    "{{DOMAIN}}"
+  ],
+  "webApplicationInfo": {
+    "id": "{{ENTRA_CLIENT_ID}}",
+    "resource": "api://{{DOMAIN}}/{{ENTRA_CLIENT_ID}}"
+  }
+}
