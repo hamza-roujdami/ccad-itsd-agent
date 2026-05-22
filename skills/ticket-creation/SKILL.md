@@ -7,11 +7,26 @@ description: Create ManageEngine ServiceDesk Plus tickets with correct classific
 
 When creating a ticket (via `createRequest`), follow these steps in order:
 
+### Step 0 — Look Up Requester
+Before creating the ticket, call `getUserDetails` with the caregiver's email to get
+their requester ID and full name. Use these in the `requester` field.
+If lookup fails, use the email directly: `{"email_id": "user@clinic.example.com"}`.
+
 ### Step 1 — Verify Priority
 Call `assess_priority` with the issue subject, description, user's suggested priority,
 impact, and urgency. Use the verified priority from the tool's response.
 
 ### Step 2 — Classify the Ticket
+
+#### Request Type (Incident vs Service Request)
+Classify based on the nature of the request:
+
+| Trigger Words | Classification |
+|---|---|
+| "not working", "broken", "down", "error", "crash", "failure", "disruption", "unavailable", "stopped" | **Incident** |
+| Everything else (new access, install software, request hardware, how-to) | **Service Request** |
+
+Set `request_type` accordingly when creating the ticket.
 
 #### Impact + Urgency
 ManageEngine derives priority from impact + urgency. Use this mapping:
@@ -41,8 +56,8 @@ Read `references/business-rules.md` for mandatory business rules before submitti
 
 ### Step 4 — Mandatory Fields
 Every ticket MUST include these 5 fields or creation will fail:
-1. `subject` — short summary
-2. `requester` — `{"email_id": "user@clinic.example.com"}`
+1. `subject` — short summary (max 50 chars)
+2. `requester` — `{"id": "...", "name": "..."}` from getUserDetails (or `{"email_id": "..."}` as fallback)
 3. `mode` — `{"name": "E-Mail"}`
 4. `group` — `{"name": "SERVICE DESK"}` (or appropriate team)
 5. `category` — `{"name": "Software"}` (or appropriate category)
