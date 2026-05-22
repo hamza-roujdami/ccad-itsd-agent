@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+dist/
+build/
+
+# Environment
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+frontend/node_modules/
+frontend/package-lock.json
+~$*
+
+# Customer documents (confidential)
+references/customer-docs/
+
+# Reference repos (cloned, not ours)
+references/CCADITSM/
+references/agent-framework/
+references/bicep-ptn-aiml-landing-zone/
+
+# Local conversation history
+conversations/
