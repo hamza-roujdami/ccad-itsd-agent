@@ -210,38 +210,40 @@ graph TB
 
 ```
 clinical-itsm-agent/
-├── agent.py              ← Agent definition (slim prompt, tools, skills, MCP)
-├── server.py             ← FastAPI server (/chat, /health, tools_used tracking)
-├── config.py             ← Settings (reads from .env)
-├── pyproject.toml        ← Dependencies
-├── kb/
-│   ├── search.py         ← search_kb @tool (Azure AI Search, semantic search)
-│   ├── priority.py       ← assess_priority @tool (multi-signal priority verification)
-│   ├── index_kb.py       ← Indexer script (Excel → Azure AI Search)
-│   ├── solutions_kb.xlsx ← 33 IT knowledge base articles
-│   └── README.md         ← KB docs
+├── README.md
+├── pyproject.toml
+├── .env.example
+│
+├── src/                   ← Python source code
+│   ├── agent.py           ← Agent definition (slim prompt, tools, skills, MCP)
+│   ├── server.py          ← FastAPI server (/chat, /health)
+│   ├── config.py          ← Settings (reads .env from project root)
+│   ├── devui_app.py       ← MAF DevUI launcher (debug/test interface)
+│   ├── kb/
+│   │   ├── search.py      ← search_kb @tool (Azure AI Search, semantic search)
+│   │   ├── priority.py    ← assess_priority @tool (multi-signal priority verification)
+│   │   ├── index_kb.py    ← Indexer script (Excel → Azure AI Search)
+│   │   └── solutions_kb.xlsx
+│   ├── voice/             ← Voice channel (Azure Communication Services)
+│   │   ├── handler.py     ← ACS Call Automation handler (STT → agent → TTS loop)
+│   │   └── routes.py      ← FastAPI routes for incoming calls
+│   └── mock_mcp/
+│       └── server.py      ← Mock ManageEngine MCP server (17 tools)
+│
 ├── skills/                ← MAF Skills (loaded on-demand, saves tokens)
-│   ├── ticket-creation/
-│   │   ├── SKILL.md       ← Ticket creation workflow + mandatory fields
-│   │   └── references/
-│   │       ├── categories.md       ← ManageEngine categories
-│   │       ├── resolver-groups.md  ← Support group routing
-│   │       └── business-rules.md   ← Clinical business rules
-│   ├── ticket-management/
-│   │   └── SKILL.md       ← Check status, add notes, update, list tickets
-│   ├── clinical-triage/
-│   │   └── SKILL.md       ← Patient care decision tree (equipment / Epic / non-Epic)
-│   └── non-it-routing/
-│       └── SKILL.md       ← HR/Facilities/Operations contacts
-├── mock_mcp/
-│   ├── __init__.py
-│   └── server.py         ← Mock ManageEngine MCP server (17 tools)
-├── frontend/             ← React chat UI
-│   ├── src/
-│   └── package.json
-├── infra/                ← Azure Bicep (AI Foundry, AI Search, Cosmos DB, Key Vault, Monitoring)
-└── tests/
-    └── test_eval.py      ← 11 automated eval tests (KB, routing, priority, tickets, multi-turn)
+│   ├── ticket-creation/   ← Ticket workflow + categories, groups, business rules
+│   ├── ticket-management/ ← Status checks, notes, updates, listing
+│   ├── clinical-triage/   ← Patient care decision tree (equipment / Epic / non-Epic)
+│   └── non-it-routing/    ← HR/Facilities/Operations contacts
+│
+├── tests/
+│   ├── test_eval.py       ← 11 agent behavior tests
+│   └── test_mcp_tools.py  ← 13 MCP tool tests (mock + real APIM)
+│
+├── docs/                  ← Architecture, deployment, gap analysis
+├── frontend/              ← React chat UI
+├── infra/                 ← Azure Bicep (AI Foundry, AI Search, Cosmos DB, Key Vault, Monitoring)
+└── references/            ← gitignored (customer docs, cloned repos)
 ```
 
 ## Quick start
@@ -284,7 +286,7 @@ MCP_SERVER_URL=http://localhost:8001/mcp
 Populate the Azure AI Search index with the 33 KB articles:
 
 ```bash
-python -m kb.index_kb
+cd src && python3 -m kb.index_kb
 ```
 
 ### Run (local development)
@@ -292,16 +294,23 @@ python -m kb.index_kb
 Terminal 1 — start the mock MCP server (ManageEngine substitute):
 
 ```bash
-python -m mock_mcp.server
+cd src && python3 -m mock_mcp.server
 ```
 
 Terminal 2 — start the agent API:
 
 ```bash
-python server.py
+cd src && python3 -c "import uvicorn; uvicorn.run('server:app', host='0.0.0.0', port=8000)"
 ```
 
-Terminal 3 — start the chat UI:
+**Or use MAF DevUI** (recommended for testing — shows tool calls, streaming, agent metadata):
+
+```bash
+cd src && python3 devui_app.py
+# Opens http://localhost:8080
+```
+
+Terminal 3 — start the React chat UI (optional, alternative to DevUI):
 
 ```bash
 cd frontend
@@ -309,7 +318,7 @@ npm install
 REACT_APP_API_URL=http://localhost:8000 npm start
 ```
 
-Open **http://localhost:3000** in your browser.
+Open **http://localhost:3000** (React UI) or **http://localhost:8080** (DevUI).
 
 ### Test via UI
 
