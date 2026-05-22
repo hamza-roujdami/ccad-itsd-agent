@@ -58,7 +58,7 @@ def create_agent(history_provider: HistoryProvider | None = None) -> Agent:
     )
 
     # Skills — progressive disclosure of ticket rules, categories, business rules
-    skills_dir = Path(__file__).parent / "skills"
+    skills_dir = Path(__file__).parent.parent / "skills"
     skills_provider = SkillsProvider.from_paths(skill_paths=str(skills_dir))
 
     # MCP connection to ManageEngine (mock locally, real APIM in production)

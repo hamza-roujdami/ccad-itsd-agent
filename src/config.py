@@ -1,7 +1,10 @@
 """Clinical ITSM Agent — Configuration."""
 
-import os
+from pathlib import Path
 from pydantic_settings import BaseSettings
+
+# .env lives at project root (one level up from src/)
+_ENV_FILE = Path(__file__).parent.parent / ".env"
 
 
 class Settings(BaseSettings):
@@ -36,7 +39,7 @@ class Settings(BaseSettings):
     host: str = "0.0.0.0"
     port: int = 8000
 
-    model_config = {"env_file": ".env", "env_file_encoding": "utf-8", "extra": "ignore"}
+    model_config = {"env_file": str(_ENV_FILE), "env_file_encoding": "utf-8", "extra": "ignore"}
 
 
 settings = Settings()

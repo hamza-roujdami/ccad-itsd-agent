@@ -7,6 +7,7 @@ Endpoints:
 
 import logging
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -71,8 +72,9 @@ def _create_history_provider():
         )
     else:
         from agent_framework import FileHistoryProvider
-        logger.info("Using FileHistoryProvider (./conversations)")
-        return FileHistoryProvider(storage_path="./conversations")
+        conversations_dir = str(Path(__file__).parent.parent / "conversations")
+        logger.info("Using FileHistoryProvider (%s)", conversations_dir)
+        return FileHistoryProvider(storage_path=conversations_dir)
 
 
 @asynccontextmanager

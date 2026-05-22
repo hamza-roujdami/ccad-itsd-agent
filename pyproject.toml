@@ -1,5 +1,5 @@
 [project]
-name = "ccad-itsm-agent"
+name = "clinical-itsm-agent"
 version = "0.1.0"
 description = "Clinical ITSM Agent — KB-first triage with ManageEngine via MCP"
 requires-python = ">=3.11"
@@ -29,5 +29,6 @@ mock = [
 ]
 
 [tool.setuptools]
-py-modules = ["agent", "config", "server", "call_handler"]
-packages = ["kb", "mock_mcp", "tests"]
+package-dir = {"" = "src"}
+packages = ["kb", "mock_mcp", "voice"]
+py-modules = ["agent", "config", "server"]
