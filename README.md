@@ -206,42 +206,26 @@ graph TB
 
 > **Skills (progressive disclosure):** Business rules, categories, and resolver groups are loaded on-demand via MAF `SkillsProvider` — only when the agent needs to create or manage tickets. KB-only queries skip loading skills entirely, saving ~800 tokens per request.
 
-## Project structure
+## Tech stack
 
-```
-clinical-itsm-agent/
-├── README.md
-├── pyproject.toml
-├── .env.example
-├── Dockerfile
-│
-├── src/                   ← Python package (the agent backend)
-│   ├── agent.py           ← Agent definition (slim prompt, tools, skills, MCP)
-│   ├── server.py          ← FastAPI server (/chat, /health)
-│   ├── config.py          ← Settings (reads ../.env)
-│   ├── devui_app.py       ← MAF DevUI launcher (debug/test interface)
-│   ├── kb/
-│   │   ├── search.py      ← search_kb @tool (Azure AI Search, semantic search)
-│   │   ├── priority.py    ← assess_priority @tool (multi-signal priority verification)
-│   │   └── index_kb.py    ← Indexer script (Excel → Azure AI Search)
-│   ├── voice/             ← Voice channel (Azure Communication Services)
-│   │   ├── handler.py     ← ACS Call Automation handler (STT → agent → TTS loop)
-│   │   └── routes.py      ← FastAPI routes for incoming calls
-│   └── skills/            ← MAF Skills (loaded on-demand, saves tokens)
-│       ├── ticket-creation/   ← Ticket workflow + categories, groups, business rules
-│       ├── ticket-management/ ← Status checks, notes, updates, listing
-│       ├── clinical-triage/   ← Patient care decision tree (equipment / Epic / non-Epic)
-│       └── non-it-routing/    ← HR/Facilities/Operations contacts
-│
-├── tests/
-│   ├── test_eval.py       ← agent behavior tests
-│   └── fixtures/mock_mcp/ ← Mock ManageEngine MCP server (local dev)
-│
-├── frontend/              ← React chat UI
-├── teams-app/             ← Teams manifest
-├── infra/                 ← Azure Bicep (AI Foundry, AI Search, Cosmos DB, Key Vault, Monitoring)
-└── .github/               ← cockpit (instructions, project-context, references — gitignored)
-```
+| Component | Technology |
+|-----------|-----------|
+| Agent Framework | [Microsoft Agent Framework](https://github.com/microsoft/agent-framework) (Python) v1.6.0 |
+| MAF: Agent | `Agent` — single-agent with tools and context providers |
+| MAF: MCP Client | `MCPStreamableHTTPTool` — connects to ManageEngine MCP server via HTTP |
+| MAF: Skills | `SkillsProvider` — progressive disclosure of business rules via `SKILL.md` files |
+| MAF: LLM Client | `FoundryChatClient` — connects to GPT-4o via Azure AI Foundry |
+| MAF: History | `CosmosHistoryProvider` (prod) / `FileHistoryProvider` (dev) — persistent conversation history |
+| MAF: DevUI | `agent_framework.devui` — local debug UI with tool-call visibility |
+| LLM | GPT-4o via Azure AI Foundry |
+| Knowledge Base | Azure AI Search (semantic search, 33 KB articles) |
+| Ticketing | ManageEngine ServiceDesk Plus via MCP (APIM gateway, 17 tools) |
+| Conversation Store | Azure Cosmos DB NoSQL (serverless) — falls back to local JSON files |
+| API | FastAPI + Uvicorn |
+| Observability | OpenTelemetry via MAF `configure_otel_providers()` → Azure App Insights |
+| Eval | pytest test suite covering all agent flows |
+| Auth | Azure Identity (`DefaultAzureCredential`) |
+| Infra | Bicep (`infra/`) |
 
 ## Quick start
 
@@ -256,7 +240,7 @@ clinical-itsm-agent/
 
 ```bash
 git clone https://github.com/hamza-roujdami/ccad-itsd-agent.git
-cd clinical-itsm-agent
+cd ccad-itsd-agent
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev,mock]"
@@ -352,26 +336,6 @@ curl -X POST http://localhost:8000/chat \
   -d '{"message": "Epic Hyperspace is down for the entire cardiology department"}'
 ```
 
-## Tech stack
-
-| Component | Technology |
-|-----------|-----------|
-| Agent Framework | [Microsoft Agent Framework](https://github.com/microsoft/agent-framework) (Python) v1.3.0 |
-| MAF: Agent | `Agent` — single-agent with tools and context providers |
-| MAF: MCP Client | `MCPStreamableHTTPTool` — connects to ManageEngine MCP server via HTTP |
-| MAF: Skills | `SkillsProvider` — progressive disclosure of business rules via `SKILL.md` files |
-| MAF: LLM Client | `FoundryChatClient` — connects to GPT-4o via Azure AI Foundry |
-| MAF: History | `CosmosHistoryProvider` (prod) / `FileHistoryProvider` (dev) — persistent conversation history |
-| LLM | GPT-4o via Azure AI Foundry |
-| Knowledge Base | Azure AI Search (semantic search, 33 KB articles) |
-| Ticketing | ManageEngine ServiceDesk Plus via MCP (APIM gateway, 17 tools) |
-| Conversation Store | Azure Cosmos DB NoSQL (serverless) — falls back to local JSON files |
-| API | FastAPI + Uvicorn |
-| Observability | OpenTelemetry via MAF `configure_otel_providers()` → Azure App Insights |
-| Eval | pytest test suite — 11 automated tests covering all agent flows |
-| Auth | Azure Identity (`DefaultAzureCredential`) |
-| Infra | Bicep (`infra/`) |
-
 ## API
 
 ### `POST /chat`
@@ -427,11 +391,11 @@ Navigate to **Azure Portal → App Insights → Agents (Preview)**:
 python -m pytest tests/test_eval.py -v
 ```
 
-11 automated tests covering KB resolution, non-IT routing, priority verification, ticket creation, ticket management, and multi-turn conversations.
+Automated tests covering KB resolution, non-IT routing, priority verification, ticket creation, ticket management, and multi-turn conversations.
 
 ## KB content
 
-33 articles covering: Cisco Phone, Printing, Epic, Passwords, VPN, VDI, MFA, MS Teams, Intune, PowerMic, Email, Monitors, and more. See [`data/README.md`](data/README.md).
+33 articles covering: Cisco Phone, Printing, Epic, Passwords, VPN, VDI, MFA, MS Teams, Intune, PowerMic, Email, Monitors, and more. See [`src/kb/README.md`](src/kb/README.md).
 
 ## Voice Architecture
 
@@ -489,8 +453,44 @@ flowchart LR
 
 > **Loop**: caller speaks → STT transcribes → agent reasons (KB lookup or MCP action) → TTS synthesizes → caller hears response. Repeats until conversation ends.
 
+## Project structure
+
+```
+clinical-itsm-agent/
+├── README.md
+├── pyproject.toml
+├── .env.example
+├── Dockerfile
+│
+├── src/                   ← Python package (the agent backend)
+│   ├── agent.py           ← Agent definition (slim prompt, tools, skills, MCP)
+│   ├── server.py          ← FastAPI server (/chat, /health)
+│   ├── config.py          ← Settings (reads ../.env)
+│   ├── devui_app.py       ← MAF DevUI launcher (debug/test interface)
+│   ├── kb/
+│   │   ├── search.py      ← search_kb @tool (Azure AI Search, semantic search)
+│   │   ├── priority.py    ← assess_priority @tool (multi-signal priority verification)
+│   │   └── index_kb.py    ← Indexer script (Excel → Azure AI Search)
+│   ├── voice/             ← Voice channel (Azure Communication Services)
+│   │   ├── handler.py     ← ACS Call Automation handler (STT → agent → TTS loop)
+│   │   └── routes.py      ← FastAPI routes for incoming calls
+│   └── skills/            ← MAF Skills (loaded on-demand, saves tokens)
+│       ├── ticket-creation/   ← Ticket workflow + categories, groups, business rules
+│       ├── ticket-management/ ← Status checks, notes, updates, listing
+│       ├── clinical-triage/   ← Patient care decision tree (equipment / Epic / non-Epic)
+│       └── non-it-routing/    ← HR/Facilities/Operations contacts
+│
+├── tests/
+│   ├── test_eval.py       ← agent behavior tests
+│   └── fixtures/mock_mcp/ ← Mock ManageEngine MCP server (local dev)
+│
+├── frontend/              ← React chat UI
+├── teams-app/             ← Teams manifest
+├── infra/                 ← Azure Bicep (AI Foundry, AI Search, Cosmos DB, Key Vault, Monitoring)
+└── .github/               ← cockpit (instructions, project-context, references — gitignored)
+```
+
 ## Related
 
 - `infra/` — Azure infrastructure (Bicep): Foundry Account + Project, GPT-4o, text-embedding-3-large, AI Search, Key Vault, Monitoring
-- `factory-code/` — Factory development team implementation (separate approach)
-- `references/` — Cloned reference repos (gitignored)
+- `.github/` — cockpit config (steering instructions, customer project-context, reference repos) — gitignored
