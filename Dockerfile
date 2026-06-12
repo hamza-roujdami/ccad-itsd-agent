@@ -28,15 +28,16 @@ RUN pip install --upgrade pip && pip install \
     "azure-communication-callautomation>=1.4.0" \
     "azure-monitor-opentelemetry-exporter>=1.0.0b30"
 
-# Application code. agent.py resolves skills via Path(__file__).parent.parent/"skills",
-# so src/ lives at /app/src and skills/ at /app/skills.
+# Application code. skills/ now lives inside src/, so a single COPY brings the
+# agent code and its skills. agent.py resolves skills via Path(__file__).parent/"skills".
 COPY src ./src
-COPY skills ./skills
 
 WORKDIR /app/src
 
 EXPOSE 8000
 
-# Default: FastAPI server. Mock MCP sidecar overrides this with:
-#   python -m mock_mcp.server
+# Default: FastAPI server.
+# NOTE: the mock MCP server now lives in tests/fixtures/mock_mcp (dev-only) and is
+# NOT included in this image. For the optional ACA mock sidecar, copy it in or
+# point MCP_SERVER_URL at the real ManageEngine MCP endpoint.
 CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000"]

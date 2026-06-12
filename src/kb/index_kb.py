@@ -23,7 +23,8 @@ from azure.search.documents.indexes.models import (
 
 from config import settings
 
-EXCEL_PATH = "kb/solutions_kb.xlsx"
+# KB source data lives in the gitignored cockpit project-context (customer material).
+EXCEL_PATH = "../.github/project-context/kb-data/solutions_kb.xlsx"
 
 
 def load_articles() -> list[dict]:

@@ -104,8 +104,8 @@ resource foundryProject 'Microsoft.CognitiveServices/accounts/projects@2025-04-0
     type: 'SystemAssigned'
   }
   properties: {
-    displayName: 'CCAD ITSD Agent'
-    description: 'ITSM agent for CCAD — KB triage + ManageEngine ticketing'
+    displayName: 'Clinical ITSD Agent'
+    description: 'ITSM agent for clinical environments — KB triage + ManageEngine ticketing'
   }
   dependsOn: [embeddingDeployment]
 }

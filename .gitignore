@@ -20,10 +20,19 @@ frontend/package-lock.json
 ~$*
 
 # Customer documents (confidential)
-references/customer-docs/
+.github/references/customer-docs/
 
 # Reference repos (cloned, not ours)
-references/
+.github/references/
 
 # Local conversation history
 conversations/
+
+# Cockpit config (personal AI agent steering — local only for now)
+.github/copilot-instructions.md
+
+# Project context — completely gitignored (customer material, notes, internal docs)
+.github/project-context/
+
+# MCP tools test — references real APIM endpoint, kept local
+tests/test_mcp_tools.py

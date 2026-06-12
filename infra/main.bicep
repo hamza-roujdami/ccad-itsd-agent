@@ -1,5 +1,5 @@
 // ============================================================================
-// CCAD ITSD Agent – Dev Infrastructure
+// Clinical ITSD Agent – Dev Infrastructure
 // Provisions: Foundry Account + Project + GPT-4o, AI Search, Key Vault, Monitoring
 // Region: Sweden Central
 // ============================================================================

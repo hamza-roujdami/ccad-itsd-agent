@@ -1,12 +1,13 @@
 # kb/
 
-Knowledge base search, data, and indexing for the CCAD ITSM Agent.
+Knowledge base search, data, and indexing for the Clinical ITSM Agent.
 
 ## Files
 
 - `search.py` — `search_kb` @tool (Azure AI Search, semantic search)
-- `solutions_kb.xlsx` — IT knowledge base articles from CCAD (33 articles)
 - `index_kb.py` — Script to create/update the Azure AI Search index
+- KB source data (`solutions_kb.xlsx`, 33 articles) lives in the gitignored
+  `.github/project-context/kb-data/` (customer material).
 
 ## Columns in solutions_kb.xlsx
 
@@ -32,6 +33,6 @@ Requires Azure CLI login (`az login`) and the following env vars in `.env`:
 
 ## Updating the KB
 
-1. Get the updated Excel from CCAD
+1. Get the updated Excel from the customer
 2. Replace `solutions_kb.xlsx`
 3. Re-run `python -m data.index_kb`

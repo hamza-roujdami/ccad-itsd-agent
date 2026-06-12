@@ -151,8 +151,8 @@ ACS_COGNITIVE_SERVICES_ENDPOINT=https://your-ai-services.cognitiveservices.azure
 ### Local Development
 
 ```bash
-# 1. Start mock MCP server
-.venv/bin/python -m mock_mcp.server &
+# 1. Start mock MCP server (from repo root)
+.venv/bin/python -m tests.fixtures.mock_mcp.server &
 
 # 2. Start the agent server
 .venv/bin/python server.py

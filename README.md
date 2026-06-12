@@ -213,37 +213,34 @@ clinical-itsm-agent/
 ├── README.md
 ├── pyproject.toml
 ├── .env.example
+├── Dockerfile
 │
-├── src/                   ← Python source code
+├── src/                   ← Python package (the agent backend)
 │   ├── agent.py           ← Agent definition (slim prompt, tools, skills, MCP)
 │   ├── server.py          ← FastAPI server (/chat, /health)
-│   ├── config.py          ← Settings (reads .env from project root)
+│   ├── config.py          ← Settings (reads ../.env)
 │   ├── devui_app.py       ← MAF DevUI launcher (debug/test interface)
 │   ├── kb/
 │   │   ├── search.py      ← search_kb @tool (Azure AI Search, semantic search)
 │   │   ├── priority.py    ← assess_priority @tool (multi-signal priority verification)
-│   │   ├── index_kb.py    ← Indexer script (Excel → Azure AI Search)
-│   │   └── solutions_kb.xlsx
+│   │   └── index_kb.py    ← Indexer script (Excel → Azure AI Search)
 │   ├── voice/             ← Voice channel (Azure Communication Services)
 │   │   ├── handler.py     ← ACS Call Automation handler (STT → agent → TTS loop)
 │   │   └── routes.py      ← FastAPI routes for incoming calls
-│   └── mock_mcp/
-│       └── server.py      ← Mock ManageEngine MCP server (17 tools)
-│
-├── skills/                ← MAF Skills (loaded on-demand, saves tokens)
-│   ├── ticket-creation/   ← Ticket workflow + categories, groups, business rules
-│   ├── ticket-management/ ← Status checks, notes, updates, listing
-│   ├── clinical-triage/   ← Patient care decision tree (equipment / Epic / non-Epic)
-│   └── non-it-routing/    ← HR/Facilities/Operations contacts
+│   └── skills/            ← MAF Skills (loaded on-demand, saves tokens)
+│       ├── ticket-creation/   ← Ticket workflow + categories, groups, business rules
+│       ├── ticket-management/ ← Status checks, notes, updates, listing
+│       ├── clinical-triage/   ← Patient care decision tree (equipment / Epic / non-Epic)
+│       └── non-it-routing/    ← HR/Facilities/Operations contacts
 │
 ├── tests/
-│   ├── test_eval.py       ← 11 agent behavior tests
-│   └── test_mcp_tools.py  ← 13 MCP tool tests (mock + real APIM)
+│   ├── test_eval.py       ← agent behavior tests
+│   └── fixtures/mock_mcp/ ← Mock ManageEngine MCP server (local dev)
 │
-├── docs/                  ← Architecture, deployment, gap analysis
 ├── frontend/              ← React chat UI
+├── teams-app/             ← Teams manifest
 ├── infra/                 ← Azure Bicep (AI Foundry, AI Search, Cosmos DB, Key Vault, Monitoring)
-└── references/            ← gitignored (customer docs, cloned repos)
+└── .github/               ← cockpit (instructions, project-context, references — gitignored)
 ```
 
 ## Quick start
@@ -294,7 +291,7 @@ cd src && python3 -m kb.index_kb
 Terminal 1 — start the mock MCP server (ManageEngine substitute):
 
 ```bash
-cd src && python3 -m mock_mcp.server
+python3 -m tests.fixtures.mock_mcp.server
 ```
 
 Terminal 2 — start the agent API:
@@ -438,7 +435,7 @@ python -m pytest tests/test_eval.py -v
 
 ## Voice Architecture
 
-End-to-end call flow from PSTN through the CCAD voice network to the AI agent and back.
+End-to-end call flow from PSTN through the clinical voice network to the AI agent and back.
 
 ```mermaid
 flowchart LR

@@ -1,5 +1,5 @@
 // ============================================================================
-// CCAD ITSD Agent — Backend hosting on Azure Container Apps
+// Clinical ITSD Agent — Backend hosting on Azure Container Apps
 // Runs the agent INSIDE the lab tenant so its system-assigned managed identity
 // can reach Foundry + AI Search (no device-compliance / Conditional Access block).
 //
