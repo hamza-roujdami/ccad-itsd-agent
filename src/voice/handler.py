@@ -75,12 +75,13 @@ async def handle_incoming_call(event: dict, call_client: CallAutomationClient) -
     # Answer the call — ACS will send events to our callback URL
     callback = _callback_url("/api/calls/events")
     logger.info("Answering call with callback: %s", callback)
-    call_client.answer_call(
+    result = call_client.answer_call(
         incoming_call_context=incoming_call_context,
         callback_url=callback,
         **_cognitive_services_kwargs(),
     )
-    logger.info("Call answered, waiting for CallConnected event")
+    logger.info("Call answered, connection_id=%s", result.call_connection_id)
+    return {"call_connection_id": result.call_connection_id}
 
 
 async def handle_call_connected(event: dict, call_connection: CallConnectionClient) -> None:
@@ -94,16 +95,16 @@ async def handle_call_connected(event: dict, call_connection: CallConnectionClie
     logger.info("Playing greeting")
 
 
-async def handle_play_completed(event: dict, call_connection: CallConnectionClient) -> None:
+async def handle_play_completed(event: dict, call_connection: CallConnectionClient, caller_id: str | None = None) -> None:
     """TTS playback finished — start listening for caller's speech."""
     logger.info("Play completed, starting speech recognition")
-    _start_recognize(call_connection)
+    _start_recognize(call_connection, caller_id)
 
 
-async def handle_play_failed(event: dict, call_connection: CallConnectionClient) -> None:
+async def handle_play_failed(event: dict, call_connection: CallConnectionClient, caller_id: str | None = None) -> None:
     """TTS playback failed — try to recover by listening."""
     logger.warning("Play failed: %s", event.get("resultInformation", {}))
-    _start_recognize(call_connection)
+    _start_recognize(call_connection, caller_id)
 
 
 async def handle_recognize_completed(
@@ -167,17 +168,25 @@ async def handle_call_disconnected(event: dict, sessions: dict) -> None:
     sessions.pop(call_id, None)
 
 
-def _start_recognize(call_connection: CallConnectionClient) -> None:
+def _start_recognize(call_connection: CallConnectionClient, caller_id: str | None = None) -> None:
     """Start speech recognition on the call."""
-    # Get the first non-ACS participant (the caller)
-    props = call_connection.get_call_properties()
     target = None
-    for p in props.targets:
-        target = p
-        break
+
+    # Use stored caller ID (phone number) for inbound PSTN calls
+    if caller_id and caller_id.startswith("4:"):
+        # PSTN caller raw ID format: "4:+1234567890"
+        phone = caller_id.removeprefix("4:")
+        target = PhoneNumberIdentifier(phone)
+        logger.info("Using caller phone number for recognition: %s", phone)
+    else:
+        # Fallback: try to get from call properties
+        props = call_connection.get_call_properties()
+        for p in props.targets:
+            target = p
+            break
 
     if not target:
-        logger.error("No target participant found for recognition")
+        logger.error("No target participant found for recognition (caller_id=%s)", caller_id)
         return
 
     logger.info("Starting recognition for participant: %s", target.raw_id if hasattr(target, 'raw_id') else target)

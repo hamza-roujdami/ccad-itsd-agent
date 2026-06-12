@@ -26,6 +26,7 @@ call_router = APIRouter(prefix="/api/calls", tags=["voice"])
 
 _call_client = None
 _call_sessions: dict[str, object] = {}
+_call_callers: dict[str, str] = {}  # call_connection_id → caller raw ID
 
 
 def init_call_client(callback_base_url: str) -> None:
@@ -56,9 +57,13 @@ async def calls_incoming(request: Request):
                 logger.error("ACS not configured, cannot answer call")
                 return Response(status_code=503)
             data = event.get("data", {})
-            logger.info("IncomingCall from: %s", data.get("from", {}).get("rawId", "unknown"))
+            caller_raw_id = data.get("from", {}).get("rawId", "unknown")
+            logger.info("IncomingCall from: %s", caller_raw_id)
             try:
-                await handle_incoming_call(data, _call_client)
+                result = await handle_incoming_call(data, _call_client)
+                # Store caller for later use in recognize
+                if result and result.get("call_connection_id"):
+                    _call_callers[result["call_connection_id"]] = caller_raw_id
             except Exception as e:
                 logger.error("Failed to answer call: %s", e, exc_info=True)
             return Response(status_code=200)
@@ -93,10 +98,12 @@ async def calls_events(request: Request):
                 await handle_call_connected(event_data, call_connection)
 
             elif event_type == "Microsoft.Communication.PlayCompleted":
-                await handle_play_completed(event_data, call_connection)
+                caller_id = _call_callers.get(call_connection_id)
+                await handle_play_completed(event_data, call_connection, caller_id)
 
             elif event_type == "Microsoft.Communication.PlayFailed":
-                await handle_play_failed(event_data, call_connection)
+                caller_id = _call_callers.get(call_connection_id)
+                await handle_play_failed(event_data, call_connection, caller_id)
 
             elif event_type == "Microsoft.Communication.RecognizeCompleted":
                 await handle_recognize_completed(event_data, call_connection, _agent, _call_sessions)
@@ -106,6 +113,7 @@ async def calls_events(request: Request):
 
             elif event_type == "Microsoft.Communication.CallDisconnected":
                 await handle_call_disconnected(event_data, _call_sessions)
+                _call_callers.pop(call_connection_id, None)
 
             else:
                 logger.info("Unhandled call event: %s", event_type)

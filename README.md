@@ -436,6 +436,62 @@ python -m pytest tests/test_eval.py -v
 
 33 articles covering: Cisco Phone, Printing, Epic, Passwords, VPN, VDI, MFA, MS Teams, Intune, PowerMic, Email, Monitors, and more. See [`data/README.md`](data/README.md).
 
+## Voice Architecture
+
+End-to-end call flow from PSTN through the CCAD voice network to the AI agent and back.
+
+```mermaid
+flowchart LR
+    classDef pstn fill:#E3F2FD,stroke:#1565C0,stroke-width:2px,color:#0D47A1
+    classDef azure fill:#E1F5FE,stroke:#0277BD,stroke-width:2px,color:#01579B
+    classDef agent fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px,color:#1B5E20
+    classDef tool fill:#FCE4EC,stroke:#C62828,stroke-width:2px,color:#B71C1C
+
+    subgraph PSTN["PSTN & Voice Network"]
+        direction TB
+        Caller["📞 User / Caregiver"]
+        CUCM["Cisco CUCM"]
+        SBC["Ribbon SBC v12.3"]
+        Caller <--> CUCM <--> SBC
+    end
+
+    subgraph ACSLayer["Azure Communication Services"]
+        direction TB
+        ACS["☁️ ACS"]
+        CallAuto["🎙️ Call Automation"]
+        ACS <--> CallAuto
+    end
+
+    subgraph Speech["Azure Speech"]
+        direction TB
+        STT["🗣️→📝 Speech-to-Text"]
+        TTS["📝→🔊 Text-to-Speech"]
+    end
+
+    subgraph AgentLayer["ITSD Agent"]
+        direction TB
+        Agent["🤖 Agent Backend"]
+        KB["🔍 Knowledge Base"]
+        MCP["🔧 ManageEngine MCP"]
+        Agent --> KB
+        Agent --> MCP
+    end
+
+    SBC <-->|"SIP"| ACS
+    CallAuto -->|"audio stream"| STT
+    STT -->|"transcript"| Agent
+    Agent -->|"response text"| TTS
+    TTS -->|"audio"| CallAuto
+
+    class Caller,CUCM,SBC pstn
+    class ACS,CallAuto azure
+    class STT,TTS azure
+    class Agent agent
+    class KB,MCP tool
+```
+
+> **Loop**: caller speaks → STT transcribes → agent reasons (KB lookup or MCP action) → TTS synthesizes → caller hears response. Repeats until conversation ends.
+
 ## Related
 
 - `infra/` — Azure infrastructure (Bicep): Foundry Account + Project, GPT-4o, text-embedding-3-large, AI Search, Key Vault, Monitoring
