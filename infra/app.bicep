@@ -56,15 +56,17 @@ param searchEndpoint string
 @description('Azure AI Search index name')
 param searchIndexName string = 'itsd-kb'
 
-@description('ACS cognitive services endpoint (for STT/TTS in calls)')
-param acsCognitiveServicesEndpoint string
+@description('ACS cognitive services endpoint (for STT/TTS in calls). Leave empty for text-only.')
+param acsCognitiveServicesEndpoint string = ''
 
-@description('ACS connection string')
+@description('ACS connection string. Leave empty for text-only (disables voice channel).')
 @secure()
-param acsConnectionString string
+param acsConnectionString string = ''
 
 @description('Application Insights connection string (optional)')
 param appInsightsConnectionString string = ''
+
+var voiceEnabled = !empty(acsConnectionString)
 
 // ---------------------------------------------------------------------------
 // Names & role definition IDs
@@ -138,16 +140,17 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
           passwordSecretRef: 'acr-password'
         }
       ]
-      secrets: [
+      secrets: concat([
         {
           name: 'acr-password'
           value: acrPassword
         }
+      ], voiceEnabled ? [
         {
           name: 'acs-connection-string'
           value: acsConnectionString
         }
-      ]
+      ] : [])
     }
     template: {
       containers: [
@@ -158,17 +161,18 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
             cpu: json('1.0')
             memory: '2Gi'
           }
-          env: [
+          env: concat([
             { name: 'FOUNDRY_PROJECT_ENDPOINT', value: foundryEndpoint }
             { name: 'FOUNDRY_MODEL', value: foundryModel }
             { name: 'AZURE_SEARCH_ENDPOINT', value: searchEndpoint }
             { name: 'AZURE_SEARCH_INDEX_NAME', value: searchIndexName }
             { name: 'MCP_SERVER_URL', value: 'http://localhost:8001/mcp' }
+            { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', value: appInsightsConnectionString }
+          ], voiceEnabled ? [
             { name: 'ACS_COGNITIVE_SERVICES_ENDPOINT', value: acsCognitiveServicesEndpoint }
             { name: 'ACS_CALLBACK_BASE_URL', value: 'https://${publicFqdn}' }
-            { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', value: appInsightsConnectionString }
             { name: 'ACS_CONNECTION_STRING', secretRef: 'acs-connection-string' }
-          ]
+          ] : [])
         }
         {
           name: 'mock-mcp'
